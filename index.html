@@ -1,0 +1,301 @@
+<!doctype html>
+<html lang="es-AR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Libreta de Casa</title>
+<meta name="description" content="Control de gastos del hogar: fijos, variables, metas de ahorro y gráficos. Para toda la familia.">
+<meta name="theme-color" content="#0E6B60" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0C1416" media="(prefers-color-scheme: dark)">
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="icon" href="./icons/icon-192.png">
+<link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Libreta">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bitter:wght@500;600;700&family=Karla:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="./css/styles.css">
+</head>
+<body>
+
+<!-- ===================== ENTRADA ===================== -->
+<div class="gate" id="gate" hidden>
+  <div class="gate-box">
+    <div class="mark" id="gateAvatar"></div>
+    <h1>Libreta de Casa</h1>
+    <p class="lede">Los gastos de la familia, en un solo lugar.</p>
+
+    <div class="card">
+      <div class="seg" id="gateSeg">
+        <button data-mode="join" aria-pressed="true">Entrar a un hogar</button>
+        <button data-mode="new" aria-pressed="false">Crear uno nuevo</button>
+      </div>
+
+      <div class="field" id="gateNameWrap" hidden>
+        <label for="gHouse">Nombre del hogar</label>
+        <input id="gHouse" class="inp" type="text" placeholder="Ej: Casa Schvartz" autocomplete="off">
+      </div>
+      <div class="field">
+        <label for="gCode">Código del hogar</label>
+        <input id="gCode" class="inp" type="text" placeholder="Mínimo 4 caracteres" autocomplete="off" autocapitalize="none">
+        <p class="hint" id="gCodeHint">Pedíselo a quien creó la libreta. Se escribe una sola vez.</p>
+      </div>
+      <div class="field">
+        <label for="gName">Tu nombre</label>
+        <input id="gName" class="inp" type="text" placeholder="Así firmás los gastos que cargues" autocomplete="off">
+      </div>
+      <button class="btn" id="gGo">Entrar</button>
+      <p class="hint" id="gErr" style="margin-top:10px;color:var(--brick)" hidden></p>
+    </div>
+    <p class="hint" style="text-align:center;margin-top:14px">
+      Sin cuentas ni contraseñas. El código queda guardado en este teléfono.
+    </p>
+  </div>
+</div>
+
+<!-- ===================== APP ===================== -->
+<div class="app" id="app" hidden>
+  <header class="top">
+    <div class="brand">
+      <span class="mark" id="brandAvatar"></span>
+      <div>
+        <h1 id="houseName">Libreta de Casa</h1>
+        <p class="sub"><span class="dot" id="stDot"></span><span id="stTxt">conectando…</span></p>
+      </div>
+      <div class="topbtns">
+        <button class="icon" id="btnCur" aria-label="Cambiar moneda">$</button>
+        <button class="icon" id="btnSettings" aria-label="Ajustes">⚙</button>
+      </div>
+    </div>
+    <div class="monthbar">
+      <button id="prevM" aria-label="Mes anterior">‹</button>
+      <div class="mlabel"><strong id="mName">—</strong><span id="mYear"></span></div>
+      <button id="nextM" aria-label="Mes siguiente">›</button>
+    </div>
+  </header>
+
+  <div id="notices"></div>
+
+  <main>
+    <!-- ---------- MES ---------- -->
+    <section class="view" id="v-mes">
+      <div class="cachito" id="cachitoBox"></div>
+
+      <div class="hero" id="hero">
+        <i class="rail"></i>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+          <span class="lbl">Gastado en el mes</span>
+          <span class="pill ok" id="heroPill">—</span>
+        </div>
+        <div class="big" id="heroTotal">$0</div>
+        <p class="of" id="heroOf"></p>
+        <div class="bar" id="heroBar"><i class="f" style="width:0"></i><i class="v" style="width:0"></i></div>
+        <div class="legend">
+          <span><i class="sw" style="background:var(--teal)"></i>Fijos <b class="num" id="lgF">$0</b></span>
+          <span><i class="sw" style="background:color-mix(in srgb,var(--teal) 45%,var(--surface-2))"></i>Variables <b class="num" id="lgV">$0</b></span>
+        </div>
+      </div>
+
+      <div class="tiles">
+        <div class="tile"><span class="v" id="tDay">$0</span><span class="n">Promedio por día</span></div>
+        <div class="tile"><span class="v" id="tProj">$0</span><span class="n">Proyección a fin de mes</span></div>
+        <div class="tile"><span class="v" id="tLeft">—</span><span class="n">Queda del presupuesto</span></div>
+        <div class="tile"><span class="v" id="tVs">—</span><span class="n">Contra el mes pasado</span></div>
+      </div>
+
+      <div class="card">
+        <header><h2>En qué se fue</h2><span class="hint" id="catCount"></span></header>
+        <div class="donutwrap" id="donutWrap"></div>
+      </div>
+
+      <div class="card">
+        <header><h2>Movimientos del mes</h2><span class="hint" id="mvCount"></span></header>
+        <div class="mv" id="mvList"></div>
+      </div>
+
+      <div class="card">
+        <header><h2>Últimos seis meses</h2><span class="hint">Fijos + variables</span></header>
+        <div class="chart" id="barsChart"></div>
+      </div>
+
+      <div class="card">
+        <header><h2>Quién carga qué</h2><span class="hint">Este mes</span></header>
+        <div id="whoList"></div>
+      </div>
+    </section>
+
+    <!-- ---------- CARGAR ---------- -->
+    <section class="view" id="v-cargar" hidden>
+      <div class="card">
+        <header><h2>Cargar un gasto</h2></header>
+        <div class="field">
+          <label for="fAmount">Monto</label>
+          <div class="money">
+            <button class="cur" id="fCur" type="button">ARS</button>
+            <input id="fAmount" class="num" type="text" inputmode="decimal" placeholder="0" autocomplete="off">
+          </div>
+        </div>
+        <div class="field"><label>Categoría</label><div class="chips" id="fCats"></div></div>
+        <div class="field"><label>Quién lo pagó</label><div class="chips" id="fWho"></div></div>
+        <div class="two">
+          <div class="field"><label for="fDate">Fecha</label><input id="fDate" class="inp" type="date"></div>
+          <div class="field"><label for="fNote">Detalle</label><input id="fNote" class="inp" type="text" placeholder="Ej: verdulería" autocomplete="off"></div>
+        </div>
+        <div class="field">
+          <label>Comprobante</label>
+          <div class="photo">
+            <img id="fPhotoPrev" alt="" hidden>
+            <span class="txt" id="fPhotoTxt">Sacale una foto al ticket y queda guardado con el gasto.</span>
+            <input type="file" id="fPhoto" accept="image/*" capture="environment">
+            <label for="fPhoto" id="fPhotoBtn">Adjuntar</label>
+          </div>
+        </div>
+        <button class="btn" id="fSave">Guardar gasto</button>
+      </div>
+      <div class="card">
+        <header><h2>Últimos cargados</h2></header>
+        <div class="mv" id="quickList"></div>
+      </div>
+    </section>
+
+    <!-- ---------- FIJOS ---------- -->
+    <section class="view" id="v-fijos" hidden>
+      <div class="card">
+        <header><h2>Gastos fijos del mes</h2><span class="hint" id="fxSum"></span></header>
+        <p class="hint" style="margin-bottom:12px">Cuentan en el total desde el día 1. Marcá el cuadrito cuando lo pagues.</p>
+        <div class="fx" id="fxList"></div>
+      </div>
+      <div class="card">
+        <header><h2>Agregar un fijo</h2></header>
+        <div class="two">
+          <div class="field"><label for="xName">Nombre</label><input id="xName" class="inp" type="text" placeholder="Ej: Luz" autocomplete="off"></div>
+          <div class="field"><label for="xAmount">Monto mensual</label>
+            <div class="money" style="padding:4px 8px">
+              <button class="cur" id="xCur" type="button">ARS</button>
+              <input id="xAmount" class="num" type="text" inputmode="decimal" placeholder="0" style="font-size:1.1rem" autocomplete="off">
+            </div>
+          </div>
+        </div>
+        <div class="field"><label>Categoría</label><div class="chips" id="xCats"></div></div>
+        <div class="field"><label for="xDay">Día de vencimiento</label><input id="xDay" class="inp num" type="number" min="1" max="31" value="10"></div>
+        <button class="btn ghost" id="xSave">Agregar gasto fijo</button>
+      </div>
+    </section>
+
+    <!-- ---------- METAS ---------- -->
+    <section class="view" id="v-metas" hidden>
+      <div class="cachito" id="cachitoGoals"></div>
+      <div id="goalList"></div>
+      <button class="btn ghost" id="gNew">Crear una meta nueva</button>
+      <div class="card">
+        <header><h2>Cómo funciona</h2></header>
+        <p class="hint">Ponés qué querés conseguir y cuánto sale. Cada vez que apartás plata la sumás con "Poner plata".
+        La app calcula sola en cuánto llegás según lo que venís poniendo, y Cachito te avisa cuando falta poco.</p>
+      </div>
+    </section>
+
+    <!-- ---------- CONSEJOS ---------- -->
+    <section class="view" id="v-consejos" hidden>
+      <div class="card">
+        <header><h2>Lo que dicen tus números</h2></header>
+        <div id="tipsAuto"></div>
+      </div>
+      <div class="card">
+        <header><h2>Regla 50 / 30 / 20</h2><span class="hint" id="ruleBase"></span></header>
+        <p class="hint" style="margin-bottom:12px">Mitad para lo necesario, 30% para lo que se disfruta, 20% para ahorrar. Comparada con tu mes:</p>
+        <div id="ruleRows"></div>
+      </div>
+      <div class="card">
+        <header><h2>Categorías mes a mes</h2></header>
+        <div class="chart" id="histTable"></div>
+      </div>
+      <div class="card">
+        <header><h2>Para ahorrar de verdad</h2><span class="hint">Ideas fijas</span></header>
+        <div id="tipsStatic"></div>
+      </div>
+    </section>
+  </main>
+
+  <nav class="tabs" id="tabs">
+    <button data-v="mes" aria-current="true"><span class="ic">◱</span>Mes</button>
+    <button data-v="cargar"><span class="ic">＋</span>Cargar</button>
+    <button data-v="fijos"><span class="ic">↻</span>Fijos</button>
+    <button data-v="metas"><span class="ic">◎</span>Metas</button>
+    <button data-v="consejos"><span class="ic">✦</span>Consejos</button>
+  </nav>
+</div>
+
+<!-- ===================== HOJAS ===================== -->
+<div class="scrim" id="scrimSet" hidden>
+  <div class="sheet" role="dialog" aria-modal="true" aria-label="Ajustes">
+    <header><h2>Ajustes</h2><button class="close" data-close="scrimSet" aria-label="Cerrar">✕</button></header>
+    <div class="card">
+      <header><h2>Presupuesto e ingreso</h2></header>
+      <div class="two">
+        <div class="field"><label for="sBudget">Presupuesto mensual</label><input id="sBudget" class="inp num" type="text" inputmode="decimal" placeholder="0"></div>
+        <div class="field"><label for="sIncome">Ingreso del hogar</label><input id="sIncome" class="inp num" type="text" inputmode="decimal" placeholder="0"></div>
+      </div>
+      <div class="field"><label for="sRate">Cotización del dólar</label><input id="sRate" class="inp num" type="text" inputmode="decimal" placeholder="0"></div>
+      <p class="hint">Todo en pesos. La cotización la ponés vos y sirve para convertir lo que cargues en dólares.</p>
+    </div>
+    <div class="card">
+      <header><h2>Categorías</h2></header>
+      <div class="chips" id="sCats" style="margin-bottom:10px"></div>
+      <div class="two"><input id="sNewCat" class="inp" type="text" placeholder="Nueva categoría"><button class="btn ghost sm" id="sAddCat">Agregar</button></div>
+    </div>
+    <div class="card">
+      <header><h2>El hogar</h2></header>
+      <p class="hint" id="sHouseInfo" style="margin-bottom:12px"></p>
+      <div class="two">
+        <button class="btn ghost sm" id="sExport">Bajar CSV del mes</button>
+        <button class="btn ghost sm" id="sCode">Cambiar el código</button>
+      </div>
+      <button class="btn danger sm" id="sLeave" style="margin-top:10px">Salir de este hogar en este teléfono</button>
+    </div>
+  </div>
+</div>
+
+<div class="scrim" id="scrimGoal" hidden>
+  <div class="sheet" role="dialog" aria-modal="true" aria-label="Meta">
+    <header><h2 id="goalSheetTitle">Nueva meta</h2><button class="close" data-close="scrimGoal" aria-label="Cerrar">✕</button></header>
+    <div class="card">
+      <div class="two">
+        <div class="field"><label for="mName2">Qué querés conseguir</label><input id="mName2" class="inp" type="text" placeholder="Ej: Viaje a Portugal" autocomplete="off"></div>
+        <div class="field"><label for="mEmoji">Ícono</label><input id="mEmoji" class="inp" type="text" value="🎯" maxlength="4"></div>
+      </div>
+      <div class="field"><label for="mTarget">Cuánto sale</label>
+        <div class="money"><button class="cur" id="mCur" type="button">ARS</button>
+          <input id="mTarget" class="num" type="text" inputmode="decimal" placeholder="0" autocomplete="off"></div>
+      </div>
+      <div class="two">
+        <div class="field"><label for="mPlan">Cuánto podés poner por mes</label><input id="mPlan" class="inp num" type="text" inputmode="decimal" placeholder="0"></div>
+        <div class="field"><label for="mDeadline">Para cuándo (opcional)</label><input id="mDeadline" class="inp" type="date"></div>
+      </div>
+      <button class="btn" id="mSave">Crear la meta</button>
+    </div>
+  </div>
+</div>
+
+<div class="scrim" id="scrimPut" hidden>
+  <div class="sheet" role="dialog" aria-modal="true" aria-label="Poner plata">
+    <header><h2 id="putTitle">Poner plata</h2><button class="close" data-close="scrimPut" aria-label="Cerrar">✕</button></header>
+    <div class="card">
+      <div class="field"><label for="pAmount">Cuánto ponés</label>
+        <div class="money"><button class="cur" id="pCur" type="button">ARS</button>
+          <input id="pAmount" class="num" type="text" inputmode="decimal" placeholder="0" autocomplete="off"></div>
+      </div>
+      <div class="field"><label for="pNote">Nota (opcional)</label><input id="pNote" class="inp" type="text" placeholder="Ej: aguinaldo" autocomplete="off"></div>
+      <button class="btn" id="pSave">Sumar a la meta</button>
+      <div id="putHistory" style="margin-top:14px"></div>
+    </div>
+  </div>
+</div>
+
+<div class="lightbox" id="lightbox" hidden><img id="lightboxImg" alt="Comprobante"></div>
+<div class="toast" id="toast" hidden></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script type="module" src="./js/app.js"></script>
+</body>
+</html>
