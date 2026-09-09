@@ -4,6 +4,9 @@
 --  Es idempotente: podés volver a correrlo sin romper nada.
 -- ============================================================
 
+-- pgcrypto: en Supabase se instala en el esquema "extensions", no en "public".
+-- Por eso las funciones que usan crypt() y gen_salt() llevan
+-- "set search_path = public, extensions".
 create extension if not exists pgcrypto;
 
 -- ------------------------------------------------------------
@@ -171,7 +174,7 @@ create or replace function create_household(
 ) returns uuid
 language plpgsql
 security definer
-set search_path = public
+set search_path = public, extensions
 as $$
 declare v_id uuid;
 begin
@@ -198,7 +201,7 @@ create or replace function join_household(
 ) returns uuid
 language plpgsql
 security definer
-set search_path = public
+set search_path = public, extensions
 as $$
 declare v_id uuid;
 begin
@@ -228,7 +231,7 @@ create or replace function change_household_code(
 ) returns void
 language plpgsql
 security definer
-set search_path = public
+set search_path = public, extensions
 as $$
 begin
   if not exists (select 1 from household_members
