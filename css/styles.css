@@ -1,59 +1,35 @@
 /* ============================================================
    Libreta de Casa — hoja de estilos
-   Tokens primero, componentes después. Todo funciona en claro y oscuro.
+   Un solo mundo visual: azul noche. Todo color se pinta explícito.
+   Tokens primero, componentes después.
    ============================================================ */
 
 :root{
-  --paper:#EDF1F0; --surface:#FFFFFF; --surface-2:#E3E9E7; --surface-3:#F6F8F7;
-  --line:#CDD8D5; --line-soft:#E0E7E5;
-  --text:#12262A; --text-2:#4E6469; --text-3:#7A8B8F;
-  --teal:#0E6B60; --teal-ink:#0A4F47; --teal-soft:#D4E6E2;
-  --ochre:#A9761B; --ochre-soft:#F3E6C9;
-  --brick:#9E3729; --brick-soft:#F6DDD8;
-  --moss:#417F3D; --moss-soft:#DCEBD9;
-  --pig:#E8A0A8; --pig-2:#D4838D; --pig-ink:#7A3B44;
-  --c1:#0E6B60; --c2:#2E6F9E; --c3:#A9761B; --c4:#9E3729; --c5:#63558C;
-  --c6:#4B8A46; --c7:#AF6152; --c8:#506B75; --c9:#7A6636;
-  --shadow-1:0 1px 1px rgba(18,38,42,.05), 0 4px 12px -8px rgba(18,38,42,.22);
-  --shadow-2:0 2px 4px rgba(18,38,42,.07), 0 18px 40px -22px rgba(18,38,42,.35);
-  --r:12px; --r-sm:8px; --r-lg:18px;
-  --step--1:.78rem; --step-0:.95rem; --step-1:1.1rem; --step-2:1.35rem; --step-3:1.7rem; --step-4:2.3rem;
-  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
-  --body:"Karla",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
-  --display:"Bitter",Georgia,"Times New Roman",serif;
-  color-scheme:light;
-}
-@media (prefers-color-scheme:dark){
-  :root:not([data-theme="light"]){
-    --paper:#0C1416; --surface:#131F22; --surface-2:#1A2A2E; --surface-3:#101A1D;
-    --line:#283B3F; --line-soft:#1F2F33;
-    --text:#E4EDEB; --text-2:#9CB0B2; --text-3:#728789;
-    --teal:#3EA294; --teal-ink:#5CBCAD; --teal-soft:#0F3A34;
-    --ochre:#D5A34D; --ochre-soft:#3A2E15;
-    --brick:#DB7462; --brick-soft:#3B1D18;
-    --moss:#78BC70; --moss-soft:#16301A;
-    --pig:#D98F98; --pig-2:#B9707B; --pig-ink:#F0CDD1;
-    --c1:#45A99B; --c2:#6BA6D6; --c3:#DDAE4E; --c4:#DE7B69; --c5:#A091CE;
-    --c6:#7CBF74; --c7:#DE9A8A; --c8:#8FAAB2; --c9:#BFA469;
-    --shadow-1:0 1px 1px rgba(0,0,0,.3), 0 4px 14px -8px rgba(0,0,0,.6);
-    --shadow-2:0 2px 6px rgba(0,0,0,.35), 0 20px 44px -24px rgba(0,0,0,.75);
-    color-scheme:dark;
-  }
-}
-:root[data-theme="dark"]{
-  --paper:#0C1416; --surface:#131F22; --surface-2:#1A2A2E; --surface-3:#101A1D;
-  --line:#283B3F; --line-soft:#1F2F33;
-  --text:#E4EDEB; --text-2:#9CB0B2; --text-3:#728789;
-  --teal:#3EA294; --teal-ink:#5CBCAD; --teal-soft:#0F3A34;
-  --ochre:#D5A34D; --ochre-soft:#3A2E15;
-  --brick:#DB7462; --brick-soft:#3B1D18;
-  --moss:#78BC70; --moss-soft:#16301A;
-  --pig:#D98F98; --pig-2:#B9707B; --pig-ink:#F0CDD1;
-  --c1:#45A99B; --c2:#6BA6D6; --c3:#DDAE4E; --c4:#DE7B69; --c5:#A091CE;
-  --c6:#7CBF74; --c7:#DE9A8A; --c8:#8FAAB2; --c9:#BFA469;
-  --shadow-1:0 1px 1px rgba(0,0,0,.3), 0 4px 14px -8px rgba(0,0,0,.6);
-  --shadow-2:0 2px 6px rgba(0,0,0,.35), 0 20px 44px -24px rgba(0,0,0,.75);
   color-scheme:dark;
+  --paper:#0E1A2E; --surface:#182A45; --surface-2:#20344F; --surface-3:#12233A;
+  --line:rgba(255,255,255,.09); --line-soft:rgba(255,255,255,.055);
+  --text:#F2F6FB; --text-2:#A9BAD1; --text-3:#7488A5;
+
+  /* acción */
+  --teal:#3987e5; --teal-ink:#6FB0F5; --teal-soft:rgba(57,135,229,.16);
+  /* estado */
+  --ochre:#FFC94A; --ochre-soft:rgba(255,201,74,.14);
+  --brick:#E86A6A; --brick-soft:rgba(232,106,106,.15);
+  --moss:#3FBF77;  --moss-soft:rgba(63,191,119,.15);
+
+  --pig:#F0A9B2; --pig-2:#D4838D; --pig-ink:#6E2F38;
+
+  /* categorías: paleta validada para fondo oscuro (orden = separación en daltonismo) */
+  --c1:#3987e5; --c2:#d95926; --c3:#199e70; --c4:#c98500; --c5:#d55181;
+  --c6:#008300; --c7:#9085e9; --c8:#e66767; --c9:#8FA3BE;
+
+  --shadow-1:0 1px 2px rgba(0,0,0,.3), 0 12px 26px -18px rgba(0,0,0,.8);
+  --shadow-2:0 2px 6px rgba(0,0,0,.4), 0 22px 44px -24px rgba(0,0,0,.85);
+  --r:16px; --r-sm:12px; --r-lg:22px;
+  --step--1:.8rem; --step-0:.95rem; --step-1:1.1rem; --step-2:1.35rem; --step-3:1.7rem; --step-4:2.2rem;
+  --mono:"Baloo 2","Trebuchet MS",ui-monospace,system-ui,sans-serif;
+  --body:"Nunito Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  --display:"Baloo 2","Trebuchet MS",system-ui,sans-serif;
 }
 
 *{box-sizing:border-box}
@@ -66,7 +42,7 @@ img{max-width:100%}
 button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 input,select,textarea{font:inherit;color:inherit}
 :focus-visible{outline:2px solid var(--teal);outline-offset:2px;border-radius:4px}
-.num{font-family:var(--mono);font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.num{font-family:var(--mono);font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:-.015em}
 .lbl{font-size:.68rem;text-transform:uppercase;letter-spacing:.09em;font-weight:700;color:var(--text-3)}
 .hint{font-size:var(--step--1);color:var(--text-2)}
 .pc{font-family:var(--mono);font-size:.7rem;color:var(--text-3)}
@@ -283,3 +259,77 @@ td.r,th.r{text-align:right;font-family:var(--mono)}
   @keyframes in{from{opacity:.4;transform:translateY(4px)}to{opacity:1;transform:none}}
 }
 @media (prefers-reduced-motion:reduce){*{animation:none !important;transition:none !important}}
+
+
+/* ============================================================
+   ESTILO AZUL NOCHE — ajustes de componentes sobre los tokens
+   ============================================================ */
+body{background:var(--paper)}
+.app,.gate{background:radial-gradient(120% 55% at 50% -8%, #16294A 0%, var(--paper) 60%)}
+.app{max-width:480px;padding-bottom:112px}
+h1,h2,h3{font-weight:700}
+.hero .big,.tile .v,.money input,.mv .amt,.goal .figs b{font-weight:700}
+
+/* la cabecera se funde con el fondo */
+.top{background:linear-gradient(var(--paper) 62%, rgba(14,26,46,0));padding-bottom:2px}
+.top::after{display:none}
+.brand h1{font-size:var(--step-2)}
+.icon{background:var(--surface);border-color:var(--line);border-radius:12px}
+
+/* el riel del hero sólo aparece cuando hay algo que avisar */
+.hero .rail{width:0}
+.hero.over .rail,.hero.warn .rail{width:4px}
+.hero{border-radius:var(--r-lg)}
+.bar i.v{background:var(--ochre)}
+.bar.over i.v{background:color-mix(in srgb,var(--brick) 55%,var(--ochre))}
+.legend .sw{border-radius:3px}
+
+/* ícono redondo de categoría, el gesto que ordena las listas */
+.catic{width:38px;height:38px;flex:0 0 38px;border-radius:12px;display:grid;place-items:center;color:#fff}
+.catic svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.mv .row{grid-template-columns:38px 1fr auto auto;gap:11px;align-items:center}
+.mv .nm em{gap:5px}
+.mv .amt small{font-family:var(--body);font-weight:600}
+.tag{width:9px;height:9px;border-radius:3px}
+.chip .tag{width:10px;height:10px}
+
+/* fijos */
+.check{border-radius:10px;border-color:var(--line)}
+.fx .due b{font-family:var(--mono);font-weight:700}
+
+/* formularios y botones */
+.inp,.money{background:var(--surface-3);border-color:var(--line)}
+.money .cur{background:var(--surface-2);color:var(--text-2);font-weight:700}
+.btn{border-radius:var(--r);padding:15px;font-weight:700;font-family:var(--display);font-size:var(--step-1);
+     box-shadow:0 8px 20px -10px rgba(57,135,229,.9)}
+.btn.ghost,.btn.danger{box-shadow:none}
+.chip[aria-pressed="true"]{background:var(--teal-soft);border-color:color-mix(in srgb,var(--teal) 55%,transparent);color:var(--teal-ink)}
+
+/* metas */
+.goal .track i{background:linear-gradient(90deg,var(--ochre),#FFB01F)}
+.goal.done .track i{background:var(--moss)}
+.milestones i.on{background:var(--ochre)}
+.goal .em{background:var(--surface-2);border-radius:14px}
+
+/* barra inferior con el + al medio */
+.tabs{max-width:480px;grid-template-columns:1fr 1fr 78px 1fr 1fr;align-items:end;
+      background:var(--surface);border-top:1px solid var(--line);
+      padding:8px 6px calc(8px + env(safe-area-inset-bottom));box-shadow:0 -14px 34px -20px #000}
+.tabs button{gap:4px;font-size:.66rem;font-weight:800;border-radius:12px}
+.tabs button .ic svg{width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.tabs button[aria-current="true"]{color:var(--teal);background:none}
+.tabs button.fab{justify-self:center;width:58px;height:58px;border-radius:50%;background:var(--teal);color:#fff;
+      margin-top:-26px;box-shadow:0 8px 20px -6px rgba(57,135,229,.75);border:4px solid var(--surface);
+      display:grid;place-items:center;gap:0;font-size:0;padding:0}
+.tabs button.fab .ic svg{width:26px;height:26px;stroke-width:2.4}
+.tabs button.fab[aria-current="true"]{background:var(--teal-ink);color:#0E1A2E}
+.tabs button.fab:active{transform:scale(.94)}
+
+/* hojas y avisos */
+.sheet{background:var(--paper);border:1px solid var(--line);border-bottom:0;border-radius:var(--r-lg) var(--r-lg) 0 0}
+.scrim{background:rgba(6,12,22,.72)}
+.notice{border-radius:var(--r)}
+.toast{bottom:96px;font-weight:800}
+.seg{background:var(--surface-2);border-radius:var(--r)}
+.seg button[aria-pressed="true"]{background:var(--surface);color:var(--text)}
+.gate .card{border-radius:var(--r-lg)}
