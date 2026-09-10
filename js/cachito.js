@@ -14,6 +14,16 @@ const FACES = {
   dormido:    { eyes:'<path d="M29.5 31h7" /><path d="M47.5 31h7" />', mouth:'<circle cx="41" cy="46" r="2.4" />', brow:'' }
 };
 
+/* Anteojos de sol: los usa cuando el mes viene bien. Cuando hay algo
+   para mirar de cerca, se los saca y se le ven los ojos. */
+const SHADES = `<g fill="#14263F" stroke="none">
+    <rect x="24.5" y="26" width="15" height="10" rx="4.4"/>
+    <rect x="44.5" y="26" width="15" height="10" rx="4.4"/>
+    <rect x="38.6" y="29" width="7" height="2.6"/></g>
+  <path d="M22 28.5c2-1.6 3.2-2 5-2M62 28.5c-2-1.6-3.2-2-5-2" stroke="#14263F" stroke-width="2" fill="none" stroke-linecap="round"/>
+  <path d="M27 28.5l4 2.5M47 28.5l4 2.5" stroke="rgba(255,255,255,.5)" stroke-width="1.8" fill="none" stroke-linecap="round"/>`;
+const CON_GAFAS = ['feliz','ok','festejo'];
+
 /** SVG de Cachito. `mood` es una de las claves de FACES. */
 export function cachitoSVG(mood = 'ok', size = 62) {
   const f = FACES[mood] || FACES.ok;
@@ -22,7 +32,7 @@ export function cachitoSVG(mood = 'ok', size = 62) {
          <circle cx="17" cy="13" r="3.4"/><circle cx="66" cy="9" r="2.6"/><circle cx="58" cy="17" r="2"/>
        </g>` : '';
   const zzz = mood === 'dormido'
-    ? `<g fill="var(--text-3)" stroke="none" font-family="var(--mono)" font-size="7" font-weight="600">
+    ? `<g fill="var(--text-3)" stroke="none" font-family="Baloo 2, sans-serif" font-size="7" font-weight="600">
          <text x="62" y="16">z</text><text x="68" y="10" font-size="9">Z</text>
        </g>` : '';
   return `<svg viewBox="0 0 84 74" width="${size}" height="${size * 74 / 84}" role="img"
@@ -38,8 +48,9 @@ export function cachitoSVG(mood = 'ok', size = 62) {
     <ellipse cx="41" cy="44" rx="9.5" ry="7.5" fill="var(--pig-2)"/>
     <ellipse cx="37.8" cy="44" rx="1.5" ry="2.1" fill="var(--pig-ink)"/>
     <ellipse cx="44.2" cy="44" rx="1.5" ry="2.1" fill="var(--pig-ink)"/>
+    ${CON_GAFAS.includes(mood) ? SHADES : ''}
     <g stroke="var(--pig-ink)" stroke-width="2.1" stroke-linecap="round" fill="none" color="var(--pig-ink)">
-      ${f.brow}${f.eyes}
+      ${f.brow}${CON_GAFAS.includes(mood) ? '' : f.eyes}
     </g>
     <path d="M69 41c4 1 5 4 3.5 6.5S67 50 65.5 47" fill="var(--pig-2)" opacity=".85"/>
   </svg>`;

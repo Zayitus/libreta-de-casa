@@ -58,6 +58,45 @@ function catColor(name){
   const j = i >= 0 ? i : Math.abs(hash(name)) % CC.length;
   return 'var(' + CC[j % CC.length] + ')';
 }
+/* ---------------- íconos de categoría ----------------
+   La categoría la escribe quien usa la app, así que el ícono
+   se elige por lo que dice el nombre, con un genérico de reserva. */
+const ICONS = {
+  super:'<path d="M3 4h2l2.4 11.2a2 2 0 0 0 2 1.6h7.7a2 2 0 0 0 2-1.5L21 8H6"/><circle cx="10" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/>',
+  comida:'<path d="M5 3v8a2.5 2.5 0 0 0 5 0V3M7.5 11v10"/><path d="M17 3c-1.6 1.6-2 3.4-2 5.5 0 1.6.7 2.5 2 2.5s2-.9 2-2.5c0-2.1-.4-3.9-2-5.5zM17 11v10"/>',
+  kiosco:'<path d="M5.6 8h12.8l-1.1 11.4a1.6 1.6 0 0 1-1.6 1.4H8.3a1.6 1.6 0 0 1-1.6-1.4z"/><path d="M9 8V6.4a3 3 0 0 1 6 0V8"/>',
+  auto:'<path d="M6.6 14.6l1.2-3.9a2.1 2.1 0 0 1 2-1.5h4.4a2.1 2.1 0 0 1 2 1.5l1.2 3.9"/><rect x="3" y="14.6" width="18" height="4.2" rx="1.8"/><path d="M7 18.8v1.4M17 18.8v1.4"/>',
+  salud:'<path d="M12 20s-7-4.4-7-9.3A4 4 0 0 1 12 8a4 4 0 0 1 7 2.7C19 15.6 12 20 12 20z"/>',
+  libro:'<path d="M4 5.5A2 2 0 0 1 6 4h5v16H6a2 2 0 0 1-2-1.6z"/><path d="M20 5.5A2 2 0 0 0 18 4h-5v16h5a2 2 0 0 0 2-1.6z"/>',
+  rayo:'<path d="M13 3L5 14h6l-1 7 8-11h-6z"/>',
+  casa:'<path d="M4 11l8-6 8 6v8a1.6 1.6 0 0 1-1.6 1.6H5.6A1.6 1.6 0 0 1 4 19z"/><path d="M10 21v-6h4v6"/>',
+  juego:'<rect x="3" y="8" width="18" height="10" rx="4"/><path d="M8 11v4M6 13h4M16 12.5h.01M18 15h.01"/>',
+  ropa:'<path d="M9 3l3 2 3-2 5 3-2 4-2-1v11H8V9L6 10 4 6z"/>',
+  bicho:'<circle cx="12" cy="12" r="8"/><path d="M12 8v4l2.5 2"/>',
+  otros:'<circle cx="6" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="18" cy="12" r="1.4"/>'
+};
+const ICON_MAP = [
+  [/super|almac|mercad|verdul|carnic|proveed|mayor|dasa|maxi/i, 'super'],
+  [/comida|resta|delivery|pedido|almuerzo|cena|panad|pan\b|fiamb/i, 'comida'],
+  [/kiosc|golos|helad|café|cafe/i, 'kiosco'],
+  [/transp|nafta|combust|auto|colect|taxi|remis|peaje|cochera|gomer/i, 'auto'],
+  [/salud|farmac|medic|obra social|osde|dent|psic|remedio/i, 'salud'],
+  [/educa|colegi|escuel|curso|ingl|libro|útil|utile|jardin|jardín/i, 'libro'],
+  [/servici|luz|gas|agua|internet|teléf|telef|cable|tv|streaming|celular|expens/i, 'rayo'],
+  [/casa|hogar|alquil|seguro|manten|ferret|mueble|limpiez/i, 'casa'],
+  [/ocio|salida|cine|juego|entreten|vacacion|regalo|gimnas|deport/i, 'juego'],
+  [/ropa|indument|calzad|zapat/i, 'ropa'],
+  [/mascot|perro|gato|veterin/i, 'bicho']
+];
+function catIcon(name){
+  const n = String(name || '');
+  for (const [re, k] of ICON_MAP) if (re.test(n)) return ICONS[k];
+  return ICONS.otros;
+}
+function catIconTag(name){
+  return `<span class="catic" style="background:${catColor(name)}" aria-hidden="true">
+    <svg viewBox="0 0 24 24">${catIcon(name)}</svg></span>`;
+}
 function hash(s){ let h = 0; for (const ch of String(s)) h = (h*31 + ch.charCodeAt(0))|0; return h; }
 function toast(m){
   const t = $('#toast'); t.textContent = m; t.hidden = false;
@@ -258,8 +297,8 @@ function renderDonut(t){
   });
   const top = cats[0], topPc = Math.round(t.byCat[top]/sum*100);
   w.innerHTML = `<svg viewBox="0 0 122 122" width="122" height="122" role="img" aria-label="Gastos por categoría">${paths}
-    <text x="61" y="58" text-anchor="middle" font-family="var(--mono)" font-size="19" font-weight="600" fill="var(--text)">${topPc}%</text>
-    <text x="61" y="72" text-anchor="middle" font-family="var(--body)" font-size="8.5" fill="var(--text-3)">${esc(top.length > 13 ? top.slice(0,12)+'…' : top)}</text></svg>
+    <text x="61" y="58" text-anchor="middle" font-family="Baloo 2, Trebuchet MS, sans-serif" font-size="19" font-weight="600" fill="var(--text)">${topPc}%</text>
+    <text x="61" y="72" text-anchor="middle" font-family="Nunito Sans, system-ui, sans-serif" font-size="8.5" fill="var(--text-3)">${esc(top.length > 13 ? top.slice(0,12)+'…' : top)}</text></svg>
     <div class="catlist">${cats.slice(0,6).map(c =>
       `<div class="catrow"><i class="tag" style="background:${catColor(c)}"></i>
         <span class="nm">${esc(c)} <span class="pc">${Math.round(t.byCat[c]/sum*100)}%</span></span>
@@ -271,10 +310,11 @@ function renderDonut(t){
 function expRow(e){
   const d = String(e.spent_on || '').split('-');
   const alt = e.currency === 'USD' && disp !== 'USD' ? `<small>US$${(+e.amount).toLocaleString('es-AR')}</small>` : '';
+  const fecha = (+d[2] || '') + (d[1] ? ' ' + MONTHS[+d[1]-1].slice(0,3) : '');
   return `<div class="row${e.pending ? ' queued' : ''}">
-    <span class="day"><b>${+d[2] || ''}</b>${d[1] ? MONTHS[+d[1]-1].slice(0,3) : ''}</span>
+    ${catIconTag(e.category)}
     <span class="nm"><strong>${esc(e.note || e.category)}</strong>
-      <em><i class="tag" style="background:${catColor(e.category)}"></i>${esc(e.category)}${
+      <em>${fecha} · ${esc(e.category)}${
         e.member_name ? ' · ' + esc(e.member_name) : ''}${e.pending ? ' · se sube después' : ''}</em></span>
     <span class="amt">${fmt(toARS(e.amount, e.currency))}${alt}</span>
     ${e.receipt_path && e.receipt_path !== 'pending'
@@ -331,7 +371,7 @@ function renderBars(){
     g += `<line x1="${pad.l}" y1="${by.toFixed(1)}" x2="${W-pad.r}" y2="${by.toFixed(1)}"
             stroke="var(--ochre)" stroke-width="1" stroke-dasharray="3 3"/>
           <text x="${W-pad.r}" y="${(by-4).toFixed(1)}" text-anchor="end" font-size="8"
-            font-family="var(--mono)" fill="var(--ochre)">presupuesto ${fmtK(b)}</text>`;
+            font-family="Baloo 2, Trebuchet MS, sans-serif" fill="var(--ochre)">presupuesto ${fmtK(b)}</text>`;
   }
   data.forEach((d,i) => {
     const x = pad.l + bw*i + (bw-inner)/2;
@@ -340,22 +380,22 @@ function renderBars(){
     if (h > 0){
       g += `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${inner.toFixed(1)}"
               height="${Math.max(h-hf,0).toFixed(1)}" rx="3"
-              fill="${isCur ? 'color-mix(in srgb,var(--teal) 45%,var(--surface-2))' : 'var(--surface-2)'}"/>
+              fill="var(--ochre)" fill-opacity="${isCur ? 1 : .5}"/>
             <rect x="${x.toFixed(1)}" y="${(H-pad.b-hf).toFixed(1)}" width="${inner.toFixed(1)}"
               height="${hf.toFixed(1)}" rx="3"
-              fill="${isCur ? 'var(--teal)' : 'color-mix(in srgb,var(--teal) 40%,var(--surface-2))'}"/>
+              fill="var(--teal)" fill-opacity="${isCur ? 1 : .5}"/>
             <text x="${(x+inner/2).toFixed(1)}" y="${(y-4).toFixed(1)}" text-anchor="middle" font-size="8.5"
-              font-family="var(--mono)" font-weight="600"
+              font-family="Baloo 2, Trebuchet MS, sans-serif" font-weight="600"
               fill="${isCur ? 'var(--text)' : 'var(--text-3)'}">${fmtK(d.tt)}</text>`;
     }
     g += `<text x="${(x+inner/2).toFixed(1)}" y="${H-9}" text-anchor="middle" font-size="8.5"
-            font-family="var(--body)" fill="${isCur ? 'var(--text-2)' : 'var(--text-3)'}"
+            font-family="Nunito Sans, system-ui, sans-serif" fill="${isCur ? 'var(--text-2)' : 'var(--text-3)'}"
             font-weight="${isCur ? 700 : 400}">${mLabel(d.k).slice(0,3)}</text>`;
   });
   $('#barsChart').innerHTML = `<svg viewBox="0 0 ${W} ${H}" width="100%" height="${H}" role="img"
       aria-label="Gasto de los últimos seis meses">${g}</svg>
     <div class="legend"><span><i class="sw" style="background:var(--teal)"></i>Fijos</span>
-      <span><i class="sw" style="background:color-mix(in srgb,var(--teal) 45%,var(--surface-2))"></i>Variables</span></div>`;
+      <span><i class="sw" style="background:var(--ochre)"></i>Variables</span></div>`;
 }
 
 function renderWho(t){
