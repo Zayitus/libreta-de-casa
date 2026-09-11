@@ -1,24 +1,70 @@
 {
-  "name": "Libreta de Casa",
-  "short_name": "Libreta",
-  "description": "Los gastos de la familia en un solo lugar: fijos, variables, metas de ahorro y gráficos.",
+  "name": "¿Dónde se va la guita?",
+  "short_name": "La guita",
+  "description": "Los gastos de la casa: fijos por dueño, carga rápida, los dólares de la tarjeta y metas de ahorro.",
   "lang": "es-AR",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#EDF1F0",
-  "theme_color": "#0E6B60",
-  "categories": ["finance", "productivity", "lifestyle"],
+  "background_color": "#0E1A2E",
+  "theme_color": "#0E1A2E",
+  "categories": [
+    "finance",
+    "productivity",
+    "lifestyle"
+  ],
   "icons": [
-    { "src": "./icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
-    { "src": "./icons/icon-512.png", "sizes": "512x512", "type": "image/png" },
-    { "src": "./icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+    {
+      "src": "./icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "./icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "./icons/maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
   ],
   "shortcuts": [
-    { "name": "Cargar un gasto", "short_name": "Cargar", "url": "./?v=cargar",
-      "icons": [{ "src": "./icons/icon-192.png", "sizes": "192x192" }] },
-    { "name": "Mis metas", "short_name": "Metas", "url": "./?v=metas",
-      "icons": [{ "src": "./icons/icon-192.png", "sizes": "192x192" }] }
+    {
+      "name": "Cargar un gasto",
+      "short_name": "Cargar",
+      "url": "./?v=cargar",
+      "icons": [
+        {
+          "src": "./icons/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "El mes",
+      "short_name": "El mes",
+      "url": "./?v=mes",
+      "icons": [
+        {
+          "src": "./icons/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "Mis metas",
+      "short_name": "Metas",
+      "url": "./?v=metas",
+      "icons": [
+        {
+          "src": "./icons/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    }
   ]
 }
