@@ -193,7 +193,8 @@ function pintarQuien(){
   $('#who').innerHTML = gente.map((g, i) =>
     `<button data-q="${esc(g)}" class="${i ? 'r' : 'g'}" aria-pressed="${g === quien}" ` +
     `title="Cargar como ${esc(g)}">${esc(g.slice(0, 1).toUpperCase())}</button>`).join('');
-  const w = $('#padWho'); if (w) w.textContent = 'cargando como ' + (quien || '—');
+  const m = $('#padMeta');
+  if (m && !$('#scrim').hidden) pintarPad();
 }
 
 function pintarEstado(){
@@ -542,33 +543,58 @@ function revisa(t){
 
 /* ====================================================================
    HOJA DE CARGA
+   El teclado tiene que verse sin scrollear: es lo que más se usa.
+   Por eso, apenas elegís el lugar la grilla se pliega en un renglón,
+   y el detalle y la foto viven detrás de dos botoncitos.
    ==================================================================== */
-const pad = { lugar:null, val:'', mon:'ARS', foto:null };
+const pad = { lugar:null, val:'', mon:'ARS', foto:null, abierto:false, nota:false };
 
 function abrirPad(id){
-  pad.lugar = id === 'otro' ? null : (LUGARES.find(l => l.id === id) || LUGARES[0]);
+  pad.lugar = id === 'otro' ? null : (LUGARES.find(l => l.id === id) || null);
   pad.val = ''; pad.mon = 'ARS'; pad.foto = null;
+  pad.abierto = !pad.lugar;          // sin lugar elegido, la grilla se muestra
+  pad.nota = false;
   $('#padNote').value = ''; $('#padOtro').value = '';
   $('#padCur').textContent = 'ARS'; $('#padCur').dataset.c = 'ARS';
-  $('#padDate').textContent = 'Hoy, ' + hoy().getDate() + ' de ' + MESES[hoy().getMonth()];
-  $('#padWho').textContent = 'cargando como ' + (quien || '—');
   $('#padShotPrev').hidden = true; $('#padShotPrev').innerHTML = '';
-  $('#padShotTxt').textContent = 'Sacarle una foto al ticket';
-  pintarPicks(); pintarPad();
+  $('#padShot').value = '';
+  pintarPad();
   $('#scrim').hidden = false;
   if (!pad.lugar) setTimeout(() => $('#padOtro').focus(), 120);
 }
-function pintarPicks(){
-  $('#picks').innerHTML = LUGARES.map(l =>
-    `<button class="pick" data-pick="${l.id}" aria-pressed="${pad.lugar?.id === l.id}">` +
-    `<span class="ic" style="background:${catC(l.cat)}">${svg(IC[l.ic])}</span>` +
-    `<strong>${esc(l.nom)}</strong></button>`).join('') +
-    `<button class="pick" data-pick="otro" aria-pressed="${!pad.lugar}">` +
-    `<span class="ic" style="background:var(--card-2)">${svg(IC.mas)}</span>` +
-    `<strong>Otro</strong></button>`;
-  $('#padOtroWrap').hidden = !!pad.lugar;
-}
+
 function pintarPad(){
+  /* lugar: grilla abierta, o el renglón con el elegido */
+  $('#picks').hidden = !pad.abierto;
+  $('#chosen').hidden = pad.abierto;
+  if (pad.abierto){
+    $('#picks').innerHTML = LUGARES.map(l =>
+      `<button class="pick" data-pick="${l.id}" aria-pressed="${pad.lugar?.id === l.id}">` +
+      `<span class="ic" style="background:${catC(l.cat)}">${svg(IC[l.ic])}</span>` +
+      `<strong>${esc(l.nom)}</strong></button>`).join('') +
+      `<button class="pick" data-pick="otro" aria-pressed="${!pad.lugar}">` +
+      `<span class="ic" style="background:var(--card-2)">${svg(IC.mas)}</span>` +
+      `<strong>Otro</strong></button>`;
+  } else {
+    $('#chosen').innerHTML = pad.lugar
+      ? `<span class="ic" style="background:${catC(pad.lugar.cat)}">${svg(IC[pad.lugar.ic])}</span>` +
+        `<strong>${esc(pad.lugar.nom)}</strong><span class="chg">cambiar</span>`
+      : `<span class="ic" style="background:var(--card-2)">${svg(IC.mas)}</span>` +
+        `<strong>Otro lugar</strong><span class="chg">cambiar</span>`;
+  }
+  $('#padOtroWrap').hidden = !!pad.lugar;
+
+  /* fecha + quién, y los dos accesos */
+  $('#padMeta').textContent = 'Hoy, ' + hoy().getDate() + ' de ' + MESES[hoy().getMonth()] +
+    ' · como ' + (quien || '—');
+  $('#padNoteBtn').innerHTML = svg(IC.lapiz);
+  $('#padNoteBtn').setAttribute('aria-pressed', String(pad.nota));
+  $('#padNoteWrap').hidden = !pad.nota;
+  $('#padShotBtn').innerHTML = svg(IC.foto) +
+    '<input id="padShot" type="file" accept="image/*" capture="environment">';
+  $('#padShotBtn').classList.toggle('on', !!pad.foto);
+
+  /* monto */
   const v = $('#padVal');
   v.textContent = pad.val ? (+pad.val).toLocaleString('es-AR') : '0';
   v.classList.toggle('zero', !pad.val);
@@ -589,9 +615,18 @@ $('#keys').addEventListener('click', e => {
 $('#picks').addEventListener('click', e => {
   const b = e.target.closest('[data-pick]'); if (!b) return;
   pad.lugar = b.dataset.pick === 'otro' ? null : LUGARES.find(l => l.id === b.dataset.pick);
-  pintarPicks();
+  pad.abierto = false;
+  pintarPad();
   if (!pad.lugar) $('#padOtro').focus();
 });
+$('#chosen').onclick = () => { pad.abierto = true; pintarPad(); };
+$('#chosen').addEventListener('keydown', e => {
+  if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); pad.abierto = true; pintarPad(); }
+});
+$('#padNoteBtn').onclick = () => {
+  pad.nota = !pad.nota; pintarPad();
+  if (pad.nota) $('#padNote').focus(); else $('#padNote').value = '';
+};
 $('#padCur').onclick = function(){
   pad.mon = pad.mon === 'ARS' ? 'USD' : 'ARS';
   this.textContent = pad.mon; this.dataset.c = pad.mon; pintarPad();
@@ -606,21 +641,23 @@ async function achicar(file){
     const i = new Image(); i.onload = () => res(i); i.onerror = rej;
     i.src = URL.createObjectURL(file);
   });
-  const max = 1200, esc2 = Math.min(1, max / Math.max(img.width, img.height));
+  const max = 1200, k = Math.min(1, max / Math.max(img.width, img.height));
   const cv = document.createElement('canvas');
-  cv.width = Math.round(img.width * esc2); cv.height = Math.round(img.height * esc2);
+  cv.width = Math.round(img.width * k); cv.height = Math.round(img.height * k);
   cv.getContext('2d').drawImage(img, 0, 0, cv.width, cv.height);
   URL.revokeObjectURL(img.src);
   return new Promise(res => cv.toBlob(b => res(b || file), 'image/jpeg', .82));
 }
-$('#padShot').addEventListener('change', async e => {
+/* el input se vuelve a dibujar en cada pintarPad, así que el listener va arriba */
+document.addEventListener('change', async e => {
+  if (e.target.id !== 'padShot') return;
   const f = e.target.files?.[0]; if (!f) return;
   try {
     pad.foto = await achicar(f);
-    $('#padShotTxt').textContent = 'Foto lista (' + Math.round(pad.foto.size/1024) + ' kB)';
     const url = URL.createObjectURL(pad.foto);
     $('#padShotPrev').innerHTML = `<img src="${url}" alt="Comprobante">`;
     $('#padShotPrev').hidden = false;
+    $('#padShotBtn').classList.add('on');
   } catch { toast('No pude leer esa foto'); }
 });
 
@@ -629,7 +666,7 @@ $('#padSave').onclick = async () => {
   if (!n) return toast('Poné un monto');
   const libre = $('#padOtro').value.trim();
   const lugar = pad.lugar ? pad.lugar.nom : libre;
-  if (!lugar) return toast('¿Dónde fue el gasto?');
+  if (!lugar){ pad.abierto = true; pintarPad(); $('#padOtro').focus(); return toast('¿Dónde fue el gasto?'); }
   const nota = $('#padNote').value.trim();
   const row = {
     amount: n,
