@@ -36,8 +36,10 @@ create table if not exists settings (
   budget       numeric(14,2) not null default 0,
   income       numeric(14,2) not null default 0,
   usd_rate     numeric(14,2) not null default 1,
+  -- Día que cierra la tarjeta, para avisar antes y pagar los dólares en dólares.
+  card_close_day int not null default 1 check (card_close_day between 1 and 31),
   categories   jsonb not null default
-    '["Supermercado","Servicios","Casa","Transporte","Salud","Educación","Ocio","Ropa","Otros"]'::jsonb,
+    '["Supermercado","Kiosco","Panadería","Transporte","Salud","Educación","Servicios","Casa","Ocio","Ropa","Otros"]'::jsonb,
   updated_at   timestamptz not null default now()
 );
 
@@ -52,6 +54,8 @@ create table if not exists fixed_expenses (
   due_day      int  not null default 1 check (due_day between 1 and 31),
   active_from  text not null,                    -- 'YYYY-MM'
   active_to    text,                             -- null = sigue vigente
+  -- De quién es el gasto: 'comun' o el nombre de quien lo banca.
+  owner        text not null default 'comun',
   created_at   timestamptz not null default now()
 );
 
@@ -74,6 +78,7 @@ create table if not exists expenses (
   member_name  text not null default '',
   note         text not null default '',
   spent_on     date not null default current_date,
+  place        text not null default '',         -- DASA, Imperio, Panadería…
   receipt_path text,                             -- ruta dentro del bucket 'receipts'
   created_at   timestamptz not null default now()
 );
@@ -313,3 +318,11 @@ create policy receipts_delete on storage.objects for delete to authenticated
          and (storage.foldername(name))[1]::uuid in (select my_households()));
 
 -- Listo. Volvé al README y seguí con el paso 3.
+
+-- ============================================================
+-- Migración para bases que ya existían (2026-09-11)
+-- ============================================================
+alter table fixed_expenses add column if not exists owner text not null default 'comun';
+alter table expenses       add column if not exists place text not null default '';
+alter table settings       add column if not exists card_close_day int not null default 1;
+create index if not exists expenses_place_idx on expenses (household_id, place);
