@@ -1,6 +1,6 @@
 /* Service worker: deja la app disponible sin internet.
    Los datos los maneja IndexedDB en store.js; acá sólo cacheamos la cáscara. */
-const VERSION = 'guita-v2';
+const VERSION = 'guita-v3';
 const SHELL = [
   './', './index.html', './css/styles.css',
   './js/app.js', './js/store.js', './js/cachito.js', './js/categorias.js', './js/config.js',

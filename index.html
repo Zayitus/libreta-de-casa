@@ -179,25 +179,26 @@
       <span class="v zero" id="padVal">0</span>
     </div>
     <p class="conv" id="padConv" hidden></p>
-    <div class="pickrow" id="picks"></div>
-    <div class="field">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M8 3v4M16 3v4M3 10h18"/></svg>
-      <span><b style="font-size:14px" id="padDate">Hoy</b><span class="k" id="padWho"></span></span>
-    </div>
+    <div class="pickrow" id="picks" hidden></div>
+    <div class="chosen" id="chosen" role="button" tabindex="0" hidden></div>
     <div class="field" id="padOtroWrap" hidden>
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h10"/></svg>
       <input id="padOtro" type="text" placeholder="¿Dónde fue?" autocomplete="off">
     </div>
-    <div class="field">
+
+    <div class="metarow">
+      <p id="padMeta">Hoy</p>
+      <button id="padNoteBtn" aria-pressed="false" aria-label="Agregar un detalle"></button>
+      <label class="shotbtn" id="padShotBtn" aria-label="Sacarle una foto al ticket">
+        <input id="padShot" type="file" accept="image/*" capture="environment">
+      </label>
+    </div>
+    <div class="field" id="padNoteWrap" hidden>
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h10"/></svg>
       <input id="padNote" type="text" placeholder="Detalle (opcional)" autocomplete="off">
     </div>
-    <label class="filebtn" id="padShotBtn">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l1.5-2h7L17 8h3a1.6 1.6 0 0 1 1.6 1.6v8A1.6 1.6 0 0 1 20 19.2H4A1.6 1.6 0 0 1 2.4 17.6v-8A1.6 1.6 0 0 1 4 8z"/><circle cx="12" cy="13" r="3.4"/></svg>
-      <span id="padShotTxt">Sacarle una foto al ticket</span>
-      <input id="padShot" type="file" accept="image/*" capture="environment">
-    </label>
     <div class="shot" id="padShotPrev" hidden></div>
+
     <div class="keys" id="keys">
       <button data-k="1">1</button><button data-k="2">2</button><button data-k="3">3</button>
       <button data-k="4">4</button><button data-k="5">5</button><button data-k="6">6</button>
