@@ -15,7 +15,7 @@ export const state = {
   householdName: '',
   memberName: '',
   members: [],
-  settings: { budget:0, income:0, usd_rate:1,
+  settings: { budget:0, income:0, usd_rate:1, card_close_day:0,
     categories:['Supermercado','Servicios','Casa','Transporte','Salud','Educación','Ocio','Ropa','Otros'] },
   fixed: [],
   payments: {},          // 'fixedId|YYYY-MM' -> true
@@ -183,7 +183,7 @@ export async function loadAll(){
   state.members = (mem.data || []).map(m => m.display_name);
   if (set.data) state.settings = {
     budget:+set.data.budget || 0, income:+set.data.income || 0,
-    usd_rate:+set.data.usd_rate || 1,
+    usd_rate:+set.data.usd_rate || 1, card_close_day:+set.data.card_close_day || 0,
     categories: Array.isArray(set.data.categories) && set.data.categories.length
       ? set.data.categories : state.settings.categories
   };
