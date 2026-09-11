@@ -1,13 +1,18 @@
-# Libreta de Casa
+# ¿Dónde se va la guita?
 
 App de gastos del hogar para toda la familia. Se instala en el celular como una app,
 funciona sin señal y se sincroniza sola entre todos los teléfonos.
 
-- **Gastos fijos** que se repiten todos los meses, con aviso de vencimiento
-- **Gastos variables** con categoría, quién pagó y foto del comprobante
+- **Gastos fijos** agrupados por dueño: los comunes, los de cada uno, los de afuera
+- **Carga rápida**: un botón por cada lugar de siempre, el monto y listo
+- **La categoría se asigna sola** por el nombre del lugar; no la elige quien carga
+- **Gastos variables** con quién pagó y foto del comprobante
 - **Metas de ahorro** con cálculo de en cuánto tiempo llegás
 - **Gráficos**: torta por categoría, últimos seis meses, comparación mes a mes
 - **Pesos y dólares**, con la cotización que vos cargues
+- **Los dólares del mes juntos**, con aviso antes de que cierre la tarjeta, para
+  pagarlos en dólares y no comerse los impuestos
+- **La barra del mes se mide contra lo que entra**, no contra un presupuesto inventado
 - **Cachito**, el chanchito que mira los números y te dice una cosa útil por vez
 - **Modo offline**: cargás sin internet y se sube solo cuando vuelve
 
@@ -92,9 +97,10 @@ vercel --prod
 
 ```
 index.html          pantalla y estructura
-css/styles.css      tokens de color y tipografía, claro y oscuro
+css/styles.css      tokens de color y tipografía (azul noche, un solo mundo visual)
 js/config.js        tus claves de Supabase
 js/store.js         datos: Supabase, caché en IndexedDB y cola offline
+js/categorias.js    categorías, íconos, lugares de carga rápida y el categorizador
 js/cachito.js       el chanchito: dibujo SVG y qué dice según los números
 js/app.js           render y comportamiento
 sw.js               service worker: la app abre sin internet
@@ -124,11 +130,16 @@ se actualiza al instante (actualización optimista) y la cola se vacía sola cua
 vuelve la conexión, cuando volvés a la app o cuando la abrís de nuevo. Las fotos
 esperan en la cola como Blob, así que podés sacar el ticket en el super sin señal.
 
-### Los avisos de vencimiento
+### Los consejos de "Revisá esto"
 
-Son notificaciones locales, no push: aparecen cuando abrís la app y hay algo
-vencido o por vencer en los próximos tres días. No hace falta servidor ni claves
-VAPID. La app además te muestra el aviso arriba de todo y pinta en rojo lo vencido.
+No son una lista escrita a mano: salen de tus propios datos. Compara entre sí los
+seguros que tengas cargados, cuenta las suscripciones prendidas y las suma al año,
+marca la categoría que más pesa sobre los fijos y avisa cuando una categoría pega
+un salto contra el mes pasado. Si no hay con qué compararse no dice nada: prefiere
+callarse antes que inventar.
+
+Los avisos de vencimiento se sacaron a propósito: acá los servicios van por débito
+automático y cada uno avisa por su cuenta.
 
 ---
 
@@ -146,6 +157,7 @@ quieta, la despertás desde el panel en un minuto.
 
 ## Ideas para más adelante
 
+- Que sugiera alternativas más baratas para los contratos que ya tenés (seguros, telefonía)
 - Cuotas con fecha de fin, que se den de baja solas cuando termina el plan
 - Presupuesto por categoría, no sólo el total
 - Aportes automáticos a las metas el día que cobrás
