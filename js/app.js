@@ -43,6 +43,27 @@ function num(t){
   return isFinite(n) ? n : 0;
 }
 
+/* Los colores los elige cada teléfono. No van a la base a propósito:
+   es una preferencia de quien mira, no un dato del hogar. */
+const TEMAS = {
+  noche: { nom:'Noche',  desc:'azul oscuro',  claro:false },
+  lila:  { nom:'Lila',   desc:'claro',        claro:true  }
+};
+const TEMA_KEY = 'libreta.tema';
+function temaActual(){
+  try { return TEMAS[localStorage.getItem(TEMA_KEY)] ? localStorage.getItem(TEMA_KEY) : 'noche'; }
+  catch { return 'noche'; }
+}
+function ponerTema(t){
+  if (!TEMAS[t]) t = 'noche';
+  document.documentElement.dataset.tema = t;
+  try { localStorage.setItem(TEMA_KEY, t); } catch {}
+  const meta = document.querySelector('meta[name="theme-color"]');
+  if (meta) meta.content = tok('--bg');
+}
+/* Lee un color del tema vigente, para los gráficos que se dibujan en SVG. */
+function tok(n){ return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }
+
 const hoy = () => new Date();
 const mesDe = d => d.toISOString().slice(0, 7);
 function toast(m){
@@ -104,7 +125,7 @@ function grupos(){
   const rank = o => (gente.has(o) ? 0 : /\s/.test(o) ? 2 : 1);
   const resto = vistos.filter(o => o !== 'comun')
     .sort((a, b) => rank(a) - rank(b) || a.localeCompare(b, 'es'));
-  const colores = ['var(--acc)', '#9085e9', 'var(--good-ink)', 'var(--c-pan)'];
+  const colores = ['var(--acc)', 'var(--lila)', 'var(--good-ink)', 'var(--c-pan)'];
   return [{ id:'comun', nom:'Comunes', color:'var(--muted)' }]
     .concat(resto.map((o, i) => ({
       id: o,
@@ -429,9 +450,9 @@ function donut(t){
   $('#catCount').textContent = cats.length + ' categorías';
   $('#donut').innerHTML =
     `<svg viewBox="0 0 124 124" width="124" height="124" role="img" aria-label="Gasto del mes por categoría">${paths}` +
-    `<text x="62" y="59" text-anchor="middle" font-family="Baloo 2, sans-serif" font-size="21" font-weight="800" fill="#F2F6FB">` +
+    `<text x="62" y="59" text-anchor="middle" font-family="Baloo 2, sans-serif" font-size="21" font-weight="800" fill="${tok('--ink')}">` +
       Math.round(foco.v/sum*100) + `%</text>` +
-    `<text x="62" y="74" text-anchor="middle" font-family="Nunito Sans, sans-serif" font-size="9" fill="#7488A5">` +
+    `<text x="62" y="74" text-anchor="middle" font-family="Nunito Sans, sans-serif" font-size="9" fill="${tok('--muted')}">` +
       esc(foco.k.length > 14 ? foco.k.slice(0,13) + '…' : foco.k) + `</text></svg>` +
     `<div class="catlist">` + datos.map(d =>
       `<button class="catrow" data-cat="${esc(d.k)}" aria-pressed="${donutSel === d.k}">` +
@@ -447,6 +468,9 @@ function barras(t){
     data.push({ m: MES3[+m.slice(5,7) - 1], f:o.fijoArs, v:o.varArs });
   }
   const max = Math.max(...data.map(d => d.f + d.v), 1);
+  const cF = tok('--acc'), cV = tok('--gold');
+  const cInk = tok('--ink'), cInk2 = tok('--ink-2'), cMute = tok('--muted');
+  const opVieja = tok('--op-pasado') || '.55';
   const W = 328, H = 172, pt = 20, pb = 22, bw = W/6, inner = 26;
   let g = '';
   data.forEach((d, i) => {
@@ -454,23 +478,23 @@ function barras(t){
     const h = tt ? (H-pt-pb) * (tt/max) : 0;
     const x = bw*i + (bw-inner)/2, y = H-pb-h;
     const hf = tt ? h * (d.f/tt) : 0, hv = h - hf;
-    const ult = i === data.length-1, op = ult ? '1' : '.55';
+    const ult = i === data.length-1, op = ult ? '1' : opVieja;
     if (hv > 4)
       g += `<path d="M${x} ${(y+hv).toFixed(1)} v${(-(hv-4)).toFixed(1)} a4 4 0 0 1 4 -4 h${inner-8}` +
-           ` a4 4 0 0 1 4 4 v${(hv-4).toFixed(1)} z" fill="#FFC94A" fill-opacity="${op}"/>`;
+           ` a4 4 0 0 1 4 4 v${(hv-4).toFixed(1)} z" fill="${cV}" fill-opacity="${op}"/>`;
     if (hf > 0)
       g += `<rect x="${x}" y="${(y+hv+2).toFixed(1)}" width="${inner}" height="${Math.max(0,hf-2).toFixed(1)}"` +
-           ` rx="3" fill="#3987e5" fill-opacity="${op}"/>`;
+           ` rx="3" fill="${cF}" fill-opacity="${op}"/>`;
     if (tt) g += `<text x="${x+inner/2}" y="${(y-6).toFixed(1)}" text-anchor="middle" font-size="10" ` +
-      `font-family="Baloo 2, sans-serif" font-weight="700" fill="${ult ? '#F2F6FB' : '#7488A5'}">${fmtK(tt)}</text>`;
+      `font-family="Baloo 2, sans-serif" font-weight="700" fill="${ult ? cInk : cMute}">${fmtK(tt)}</text>`;
     g += `<text x="${x+inner/2}" y="${H-6}" text-anchor="middle" font-size="11" ` +
-      `font-family="Nunito Sans, sans-serif" fill="${ult ? '#A9BAD1' : '#7488A5'}">${d.m}</text>`;
+      `font-family="Nunito Sans, sans-serif" fill="${ult ? cInk2 : cMute}">${d.m}</text>`;
   });
   const enCurso = mes === mesDe(hoy());
   $('#bars').innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img" ` +
     `aria-label="Gasto fijo y variable de los últimos seis meses">${g}</svg>` +
-    `<div class="leg"><span><i style="background:#3987e5"></i>Fijos</span>` +
-    `<span><i style="background:#FFC94A"></i>Variables</span>` +
+    `<div class="leg"><span><i style="background:${cF}"></i>Fijos</span>` +
+    `<span><i style="background:${cV}"></i>Variables</span>` +
     (enCurso ? `<span style="margin-left:auto;color:var(--muted);font-size:11.5px">` +
       `${MESES[hoy().getMonth()]} va por el día ${hoy().getDate()}</span>` : '') + `</div>`;
 }
@@ -692,6 +716,18 @@ function abrirSet(){
   const gente = S.state.members;
   $('#setBody').innerHTML = `
     <div class="sect">
+      <h3>Cómo se ve en este teléfono</h3>
+      <div class="temas" id="temas">
+        ${Object.entries(TEMAS).map(([id, t]) => `
+          <button class="tema t-${id}" data-tema="${id}" aria-pressed="${temaActual() === id}">
+            <span class="muestra"><i class="f"></i><i class="c"></i><i class="a"></i></span>
+            <strong>${t.nom}</strong><span class="sub">${t.desc}</span>
+          </button>`).join('')}
+      </div>
+      <p class="hint">Cada uno elige el suyo: no le cambia los colores a nadie más.</p>
+    </div>
+
+    <div class="sect">
       <h3>La plata que entra</h3>
       <div class="row2">
         <div class="fld"><label for="sIng">Por mes, entre todos</label>
@@ -740,6 +776,13 @@ function abrirSet(){
     </div>`;
   $('#setScrim').hidden = false;
 
+  $('#temas').addEventListener('click', e => {
+    const b = e.target.closest('[data-tema]'); if (!b) return;
+    ponerTema(b.dataset.tema);
+    abrirSet();                 // se redibuja con los colores nuevos
+    render();
+    toast('Tema ' + TEMAS[b.dataset.tema].nom.toLowerCase());
+  });
   $('#sSave').onclick = async () => {
     await S.saveSettings({
       income: num($('#sIng').value),
@@ -849,6 +892,8 @@ document.addEventListener('keydown', e => {
    ARRANQUE
    ==================================================================== */
 S.subscribe(() => { if (!$('#app').hidden) render(); else pintarEstado(); });
+
+ponerTema(temaActual());
 
 (async () => {
   pintarGate();
