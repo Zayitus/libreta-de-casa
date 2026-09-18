@@ -7,6 +7,16 @@ import * as S from './store.js';
 import { cachito, bocadillo } from './cachito.js';
 import { CATS, catC, catI, LUGARES, categorizar, IC, svg } from './categorias.js';
 
+/* La flechita circular: lo que distingue a un fijo de un gasto suelto. */
+IC.repite = '<path d="M20 11a8 8 0 0 0-14.3-4.9M4 13a8 8 0 0 0 14.3 4.9"/>' +
+            '<path d="M20 4.5V11h-6.5M4 19.5V13h6.5"/>';
+
+/* Grupos que se le ofrecen a un gasto fijo. */
+const duenios = () => [{ id:'comun', nom:'De los dos / de la casa' }]
+  .concat(S.state.members.map(m => ({ id:m, nom:'De ' + m })))
+  .concat([{ id:'Casa de mamá', nom:'Casa de mamá' }]
+    .filter(x => !S.state.members.includes(x.id)));
+
 const $  = s => document.querySelector(s);
 const $$ = s => Array.from(document.querySelectorAll(s));
 
@@ -334,8 +344,9 @@ function fijosBox(){
   const fx = fijosDe(mes);
   if (!fx.length){
     $('#fxGroups').innerHTML = `<p class="empty"><b>No hay gastos fijos cargados</b>` +
-      `Agregalos desde el engranaje de arriba: el colegio, la luz, el gas, los seguros.</p>`;
+      `Tocá el botón de abajo y cargá el primero: el colegio, la luz, el gas, los seguros.</p>`;
     $('#fxCount').textContent = '';
+    $('#btnNuevoFijo').innerHTML = '<span class="ic">' + svg(IC.repite) + '</span>Agregar un gasto fijo';
     return;
   }
   let total = 0;
@@ -347,11 +358,12 @@ function fijosBox(){
     return `<div class="grp"><div class="h"><i style="background:${g.color}"></i>` +
       `<strong>${esc(g.nom)}</strong><b>${fmt(sum)}</b></div>` +
       items.sort((a, b) => ars(b.amount, b.currency) - ars(a.amount, a.currency)).map(f =>
-        `<div class="it"><span>${esc(f.name)}</span><b>${fmt(ars(f.amount, f.currency))}` +
+        `<div class="it" data-fijo="${esc(f.id)}"><span>${esc(f.name)}</span><b>${fmt(ars(f.amount, f.currency))}` +
         (f.currency === 'USD' ? ` <u>${fmtU(f.amount)}</u>` : '') + '</b></div>').join('') +
       '</div>';
   }).join('') + `<div class="tot"><span>Total fijos</span><b>${fmt(total)}</b></div>`;
   $('#fxCount').textContent = fx.length + ' conceptos';
+  $('#btnNuevoFijo').innerHTML = '<span class="ic">' + svg(IC.repite) + '</span>Agregar un gasto fijo';
 }
 
 /* --------------------------------- metas --------------------------------- */
@@ -708,6 +720,82 @@ $('#padSave').onclick = async () => {
 };
 
 /* ====================================================================
+   GASTO FIJO
+   Tiene hoja propia y color propio: un fijo se carga una vez y vuelve
+   todos los meses, así que no se mezcla con la carga del día a día.
+   ==================================================================== */
+const fijo = { id:null, val:'', mon:'ARS' };
+
+function abrirFijo(id){
+  const f = id ? S.state.fixed.find(x => x.id === id) : null;
+  fijo.id = f ? f.id : null;
+  fijo.val = f ? String(Math.round(+f.amount * 100) / 100) : '';
+  fijo.mon = f ? f.currency : 'ARS';
+  $('#fixTitle').textContent = f ? 'Corregir gasto fijo' : 'Nuevo gasto fijo';
+  $('#fixName').value = f ? f.name : '';
+  $('#fixRepite').innerHTML = svg(IC.repite) + 'se repite todos los meses';
+  $('#fixOwner').innerHTML = duenios().map(d =>
+    `<option value="${esc(d.id)}"${(f && (f.owner || 'comun') === d.id) ? ' selected' : ''}>${esc(d.nom)}</option>`).join('');
+  $('#fixCur').textContent = fijo.mon; $('#fixCur').dataset.c = fijo.mon;
+  $('#fixDel').hidden = !f;
+  pintarFijo();
+  $('#fixScrim').hidden = false;
+  if (!f) setTimeout(() => $('#fixName').focus(), 120);
+}
+
+function pintarFijo(){
+  const v = $('#fixVal');
+  const n = +fijo.val || 0;
+  v.textContent = fijo.val ? n.toLocaleString('es-AR') : '0';
+  v.classList.toggle('zero', !fijo.val);
+  const c = $('#fixConv');
+  if (fijo.mon === 'USD' && n){
+    c.hidden = false;
+    c.innerHTML = '≈ ' + fmt(n * rate()) + ' a $' + rate().toLocaleString('es-AR');
+  } else c.hidden = true;
+  const nom = $('#fixName').value.trim();
+  $('#fixCat').innerHTML = nom
+    ? 'Va a quedar en <b>' + esc(categorizar(nom)) + '</b> — la categoría se asigna sola.'
+    : 'La categoría se asigna sola por el nombre.';
+}
+
+$('#btnNuevoFijo').onclick = () => abrirFijo(null);
+$('#fixKeys').addEventListener('click', e => {
+  const b = e.target.closest('button[data-k]'); if (!b) return;
+  const k = b.dataset.k;
+  if (k === 'del') fijo.val = fijo.val.slice(0, -1);
+  else if (fijo.val.length < 10) fijo.val = (fijo.val === '0' ? '' : fijo.val) + k;
+  pintarFijo();
+});
+$('#fixName').addEventListener('input', pintarFijo);
+$('#fixCur').onclick = function(){
+  fijo.mon = fijo.mon === 'ARS' ? 'USD' : 'ARS';
+  this.textContent = fijo.mon; this.dataset.c = fijo.mon; pintarFijo();
+};
+$('#fixX').onclick = () => { $('#fixScrim').hidden = true; };
+$('#fixScrim').addEventListener('click', e => { if (e.target === e.currentTarget) e.currentTarget.hidden = true; });
+
+$('#fixSave').onclick = async () => {
+  const name = $('#fixName').value.trim();
+  const amount = num(fijo.val);
+  if (!name) return toast('¿Qué gasto es?');
+  if (!amount) return toast('Poné el monto');
+  const row = { name, amount, currency: fijo.mon,
+                category: categorizar(name), owner: $('#fixOwner').value };
+  $('#fixScrim').hidden = true;
+  if (fijo.id) { await S.updateFixed(fijo.id, row); toast(name + ' corregido'); }
+  else { await S.addFixed({ ...row, due_day:10, active_from: mesDe(hoy()) });
+         toast(name + ' → ' + row.category); }
+  render();
+};
+$('#fixDel').onclick = async () => {
+  if (!fijo.id || !confirm('¿Borrar este gasto fijo? Deja de contar en todos los meses.')) return;
+  $('#fixScrim').hidden = true;
+  await S.delFixed(fijo.id);
+  render();
+};
+
+/* ====================================================================
    AJUSTES
    ==================================================================== */
 function abrirSet(){
@@ -743,18 +831,8 @@ function abrirSet(){
 
     <div class="sect">
       <h3>Gastos fijos (${fx.length})</h3>
-      <div class="fld"><input id="nfName" class="inp" type="text" placeholder="Nombre — ej: Cooperativa eléctrica"></div>
-      <div class="row2">
-        <div class="fld"><input id="nfAmount" class="inp" type="text" inputmode="decimal" placeholder="Monto"></div>
-        <div class="fld"><select id="nfCur" class="inp"><option>ARS</option><option>USD</option></select></div>
-      </div>
-      <div class="fld"><label for="nfOwner">¿De quién es?</label>
-        <select id="nfOwner" class="inp">
-          <option value="comun">De los dos / de la casa</option>
-          ${gente.map(g => `<option value="${esc(g)}">De ${esc(g)}</option>`).join('')}
-          <option value="Casa de mamá">Casa de mamá</option>
-        </select></div>
-      <button class="btn ghost" id="nfAdd">Agregar gasto fijo</button>
+      <button class="btn fijo" id="nfAdd"><span class="ic"></span>Agregar un gasto fijo</button>
+      <p class="hint">También está en "El mes", abajo de la lista. Tocá cualquiera de la lista para corregirlo.</p>
       <div style="margin-top:14px">
         ${fx.length ? fx.slice().sort((a,b) => ars(b.amount,b.currency) - ars(a.amount,a.currency)).map(f =>
           `<div class="mini"><span>${esc(f.name)} <span class="sub">· ${esc(f.category)}</span></span>` +
@@ -791,17 +869,8 @@ function abrirSet(){
     });
     $('#setScrim').hidden = true; toast('Guardado'); render();
   };
-  $('#nfAdd').onclick = async () => {
-    const name = $('#nfName').value.trim(), amount = num($('#nfAmount').value);
-    if (!name || !amount) return toast('Falta el nombre o el monto');
-    await S.addFixed({
-      name, amount, currency: $('#nfCur').value,
-      category: categorizar(name), due_day: 10,
-      active_from: mesDe(hoy()), owner: $('#nfOwner').value
-    });
-    toast(name + ' → ' + categorizar(name));
-    abrirSet(); render();
-  };
+  $('#nfAdd').innerHTML = '<span class="ic">' + svg(IC.repite) + '</span>Agregar un gasto fijo';
+  $('#nfAdd').onclick = () => { $('#setScrim').hidden = true; abrirFijo(null); };
   $('#sCodeGo').onclick = async () => {
     const c = $('#sCode').value.trim();
     if (c.length < 4) return toast('Mínimo 4 caracteres');
@@ -860,6 +929,9 @@ document.addEventListener('click', async e => {
   const c = e.target.closest('[data-cat]');
   if (c){ donutSel = donutSel === c.dataset.cat ? null : c.dataset.cat; donut(totales(mes)); }
 
+  const fj = e.target.closest('[data-fijo]');
+  if (fj) abrirFijo(fj.dataset.fijo);
+
   const d = e.target.closest('[data-del]');
   if (d && confirm('¿Borrar este gasto?')) await S.delExpense(d.dataset.del);
 
@@ -885,7 +957,7 @@ $('#btnNuevaMeta').onclick = async () => {
 
 document.addEventListener('keydown', e => {
   if (e.key !== 'Escape') return;
-  $('#scrim').hidden = true; $('#setScrim').hidden = true;
+  $('#scrim').hidden = true; $('#setScrim').hidden = true; $('#fixScrim').hidden = true;
 });
 
 /* ====================================================================

@@ -281,6 +281,10 @@ async function run(op){
     const r = await sb.from('fixed_expenses').insert({ ...op.row, household_id:h });
     if (r.error) fail(r.error);
   }
+  else if (op.kind === 'fixed.upd') {
+    const r = await sb.from('fixed_expenses').update(op.patch).eq('id', op.id2).eq('household_id', h);
+    if (r.error) fail(r.error);
+  }
   else if (op.kind === 'fixed.del') {
     const r = await sb.from('fixed_expenses').delete().eq('id', op.id2).eq('household_id', h);
     if (r.error) fail(r.error);
@@ -337,6 +341,11 @@ export function addFixed(row){
   state.fixed = [...state.fixed, { ...row, id: tmpId(), pending:true }];
   emit();
   return enqueue({ kind:'fixed.add', row });
+}
+export function updateFixed(id, patch){
+  state.fixed = state.fixed.map(f => f.id === id ? { ...f, ...patch } : f);
+  emit();
+  return enqueue({ kind:'fixed.upd', id2:id, patch });
 }
 export function delFixed(id){
   state.fixed = state.fixed.filter(f => f.id !== id);

@@ -42,8 +42,11 @@ const REGLAS = [
   ['Transporte',   ['nafta','combustible','ypf','shell','axion','puma','gnc','peaje','estacionamiento','cochera','taxi','remis','cubierta','neumatic','neumátic','service','mecanic','mecánic','lubricentro','seguro','sancor','federacion patronal','federación patronal','patente','vtv','lavadero']],
   ['Salud',        ['osde','farmacia','remedio','medicament','dentista','odontolog','oculista','optica','óptica','laboratorio','clinica','clínica','sanatorio','kinesio']],
   ['Educación',    ['escuela','colegio','jif','ingles','inglés','next','universidad','ugr','utn','facultad','cuota','matricula','matrícula','libreria','librería','util escolar','útil escolar','curso','instituto']],
-  ['Servicios',    ['camuzzi','gas','luz','cooperativa','electric','eléctric','agua','internet','wifi','telecentro','tv fuego','cable','celular','tuenti','claro','personal','movistar','telefon','teléfon','abono','claude','chatgpt','spotify','suscrip']],
-  ['Casa',         ['ferreter','pintureria','pinturería','sodimac','easy','corralon','corralón','mueble','electrodomest','electrodomést','limpieza','bazar','jardin','jardín','alquiler','expensa','municipal','inmobiliar']],
+  ['Servicios',    ['camuzzi','gas','luz','cooperativa','electric','eléctric','agua','internet','wifi','telecentro','tv fuego','cable','celular','tuenti','claro','personal','movistar','telefon','teléfon','abono','claude','chatgpt','spotify','suscrip','monotributo','afip','arca',
+                    'starlink','fibertel','flow','directv','antivirus','dominio','hosting']],
+  ['Casa',         ['ferreter','pintureria','pinturería','sodimac','easy','corralon','corralón','mueble','electrodomest','electrodomést','limpieza','bazar','jardin','jardín','alquiler','expensa','municipal','inmobiliar','rentas','impuesto','abl',
+                    'tasa','arba','agip','seguro de hogar','consorcio','plomer','electricista',
+                    'gasista','albanil','albañil','pintor','vidrier','cerrajer']],
   ['Ocio',         ['netflix','disney','hbo','max','prime','cine','resto','restaurant','bar ','cerve','helad','delivery','pedidosya','rappi','salida','juego','play','steam','regalo','cumple']],
   ['Ropa',         ['ropa','zapatill','calzado','indument','zara','tienda','remera','pantalon','pantalón','campera']]
 ];
