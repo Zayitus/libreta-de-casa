@@ -10,6 +10,7 @@ const HOUSE_KEY = 'libreta.household';
 const NAME_KEY  = 'libreta.member';
 export const state = {
   online: navigator.onLine,
+  problema: '',          // por qué no se pudo hablar con la nube, si pasó
   ready: false,
   householdId: null,
   householdName: '',
@@ -89,30 +90,49 @@ export async function boot(){
   await refreshQueueCount();
   emit();
 
-  if (!window.supabase) throw new Error('No cargó la librería de Supabase');
-  if (!/^https:\/\/.+\.supabase\.co/.test(SUPABASE_URL))
-    throw new Error('Falta configurar js/config.js con los datos de tu proyecto');
+  /* Nada de esto puede tumbar la app: si el teléfono está sin señal o la
+     nube no contesta, se abre igual con lo último que quedó guardado y se
+     sincroniza cuando vuelva. La única vez que hay que frenar es cuando
+     todavía no entraste a ningún hogar y no hay nada que mostrar. */
+  state.problema = '';
+  try {
+    if (!window.supabase) throw new Error('lib');
+    if (!/^https:\/\/.+\.supabase\.co/.test(SUPABASE_URL))
+      throw new Error('Falta configurar js/config.js con los datos de tu proyecto');
 
-  sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-    auth: { persistSession:true, autoRefreshToken:true }
-  });
+    sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+      auth: { persistSession:true, autoRefreshToken:true }
+    });
 
-  let { data:{ session } } = await sb.auth.getSession();
-  if (!session) {
-    const { data, error } = await sb.auth.signInAnonymously();
-    if (error) throw new Error('No se pudo iniciar sesión: ' + error.message
-      + '. ¿Activaste "Anonymous sign-ins" en Supabase?');
-    session = data.session;
-  }
+    let { data:{ session } } = await sb.auth.getSession();
+    if (!session) {
+      const { data, error } = await sb.auth.signInAnonymously();
+      if (error) throw error;
+      session = data.session;
+    }
 
-  if (state.householdId) {
-    await loadAll();
-    listen();
-    flush();
+    if (state.householdId) {
+      await loadAll();
+      listen();
+      flush();
+    }
+  } catch (e) {
+    state.problema = porQue(e);
+    if (!state.householdId) { state.ready = true; emit(); throw new Error(state.problema); }
+    console.warn('Arrancando con los datos guardados:', e);
   }
   state.ready = true;
   emit();
   return !!state.householdId;
+}
+
+/* Traduce el error a algo que se entienda en la pantalla. */
+function porQue(e){
+  const m = String((e && e.message) || e || '');
+  if (m === 'lib') return 'No se pudo cargar una parte de la app. Probá de nuevo.';
+  if (/fetch|network|failed|timeout|abort/i.test(m)) return 'Sin conexión con la nube.';
+  if (/anonymous/i.test(m)) return 'El ingreso sin cuenta está desactivado en Supabase.';
+  return m || 'No se pudo conectar.';
 }
 
 export function isConfigured(){
@@ -122,13 +142,18 @@ export function isConfigured(){
 /* ------------------------------------------------------------
    Entrar / crear hogar
    ------------------------------------------------------------ */
+function exigirNube(){
+  if (!sb) throw new Error(state.problema || 'Sin conexión. Probá de nuevo cuando tengas señal.');
+}
 export async function createHouse(name, code, displayName){
+  exigirNube();
   const { data, error } = await sb.rpc('create_household',
     { p_name:name, p_code:code, p_display_name:displayName });
   if (error) throw new Error(error.message);
   await settle(data, displayName);
 }
 export async function joinHouse(code, displayName){
+  exigirNube();
   const { data, error } = await sb.rpc('join_household',
     { p_code:code, p_display_name:displayName });
   if (error) throw new Error(
@@ -163,7 +188,19 @@ const since = () => {
   return d.toISOString().slice(0,10);
 };
 
-export async function loadAll(){
+let cargando = null, pedirDeNuevo = false;
+/* Varias cosas piden recargar a la vez (realtime, volver a la app, la cola).
+   Las juntamos: si ya hay una carga en curso, se espera a esa. */
+export function loadAll(){
+  if (cargando) { pedirDeNuevo = true; return cargando; }
+  cargando = cargarTodo().finally(() => {
+    cargando = null;
+    if (pedirDeNuevo) { pedirDeNuevo = false; loadAll(); }
+  });
+  return cargando;
+}
+
+async function cargarTodo(){
   if (!sb || !state.householdId || !navigator.onLine) return;
   const h = state.householdId;
   const [house, mem, set, fx, pay, exp, gl, con] = await Promise.all([
@@ -177,7 +214,8 @@ export async function loadAll(){
     sb.from('goal_contributions').select('*').eq('household_id', h).order('created_at',{ascending:false})
   ]);
   const err = [house,mem,set,fx,pay,exp,gl,con].find(r => r.error);
-  if (err) { console.warn('Error leyendo', err.error); return; }
+  if (err) { console.warn('Error leyendo', err.error); state.problema = porQue(err.error); emit(); return; }
+  state.problema = '';
 
   state.householdName = house.data?.name || 'Mi casa';
   state.members = (mem.data || []).map(m => m.display_name);
@@ -392,7 +430,7 @@ export async function receiptUrl(path){
   return data?.signedUrl || null;
 }
 
-window.addEventListener('online',  () => { state.online = true;  emit(); flush(); });
+window.addEventListener('online',  () => { state.online = true; state.problema = ''; emit(); flush(); });
 window.addEventListener('offline', () => { state.online = false; emit(); });
 document.addEventListener('visibilitychange', () => {
   if (!document.hidden && navigator.onLine) { flush(); loadAll(); }

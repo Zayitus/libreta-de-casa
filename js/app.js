@@ -231,6 +231,7 @@ function pintarQuien(){
 function pintarEstado(){
   const e = $('#estado'), txt = $('#estadoTxt');
   if (!S.state.online){ e.className = 'state off'; txt.textContent = 'sin señal — se guarda igual'; }
+  else if (S.state.problema){ e.className = 'state off'; txt.textContent = S.state.problema.toLowerCase(); }
   else if (S.state.queue){ e.className = 'state cola'; txt.textContent = `subiendo ${S.state.queue}…`; }
   else { e.className = 'state'; txt.textContent = S.state.householdName || 'al día'; }
 }
@@ -973,9 +974,17 @@ ponerTema(temaActual());
   try {
     const dentro = await S.boot();
     if (dentro) entrar(); else $('#gate').hidden = false;
+    if (dentro && S.state.problema)
+      toast(S.state.problema + ' Estás viendo lo último guardado.');
   } catch (e){
+    /* Sólo llega acá quien todavía no entró a ningún hogar: no hay nada
+       guardado para mostrar, así que se explica y se ofrece reintentar. */
     $('#gate').hidden = false;
-    const el = $('#gErr'); el.textContent = String(e.message || e); el.hidden = false;
+    const el = $('#gErr');
+    el.innerHTML = esc(String(e.message || e)) +
+      ' <button id="gRetry" style="text-decoration:underline;font-weight:800">Reintentar</button>';
+    el.hidden = false;
+    $('#gRetry').onclick = () => location.reload();
   }
 })();
 
