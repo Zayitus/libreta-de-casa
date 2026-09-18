@@ -1,15 +1,20 @@
 /* Service worker: deja la app disponible sin internet.
    Los datos los maneja IndexedDB en store.js; acá sólo cacheamos la cáscara. */
-const VERSION = 'guita-v5';
+const VERSION = 'guita-v6';
 const SHELL = [
   './', './index.html', './css/styles.css',
   './js/app.js', './js/store.js', './js/cachito.js', './js/categorias.js', './js/config.js',
+  './js/vendor/supabase.js', './js/vendor/591.supabase.js',
   './manifest.webmanifest', './icons/icon-192.png', './icons/icon-512.png'
 ];
 
+/* Uno por uno: si un archivo falla, los demás igual quedan guardados.
+   Con addAll bastaba que fallara uno para quedarse sin caché entera. */
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(VERSION)
-    .then(c => c.addAll(SHELL).catch(() => {}))
+    .then(c => Promise.all(SHELL.map(u => c.add(u).catch(err => {
+      console.warn('No se pudo guardar', u, err);
+    }))))
     .then(() => self.skipWaiting()));
 });
 
