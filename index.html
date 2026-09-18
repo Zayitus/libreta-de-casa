@@ -121,6 +121,9 @@
       <div class="card">
         <header><h2>Gastos fijos</h2><span class="sub" id="fxCount"></span></header>
         <div id="fxGroups"></div>
+        <button class="btn fijo" id="btnNuevoFijo">
+          <span class="ic"></span>Agregar un gasto fijo
+        </button>
       </div>
 
       <div class="card">
@@ -206,6 +209,40 @@
       <button data-k="000">000</button><button data-k="0">0</button><button data-k="del">←</button>
     </div>
     <button class="save" id="padSave">Guardar</button>
+  </div>
+</div>
+
+<!-- ------------------ GASTO FIJO (hoja aparte) ------------------ -->
+<div class="scrim" id="fixScrim" hidden>
+  <div class="sheet fixsheet" role="dialog" aria-modal="true" aria-label="Gasto fijo">
+    <div class="grab"></div>
+    <header>
+      <h2 id="fixTitle">Nuevo gasto fijo</h2>
+      <button class="x" id="fixX" aria-label="Cerrar">✕</button>
+    </header>
+    <p class="repite" id="fixRepite"></p>
+    <div class="amount">
+      <button class="cur" id="fixCur" data-c="ARS" title="Cambiar moneda">ARS</button>
+      <span class="v zero" id="fixVal">0</span>
+    </div>
+    <p class="conv" id="fixConv" hidden></p>
+    <div class="field">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h10"/></svg>
+      <input id="fixName" type="text" placeholder="¿Qué es? Ej: Cooperativa eléctrica" autocomplete="off">
+    </div>
+    <div class="field">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.4"/><path d="M5 20a7 7 0 0 1 14 0"/></svg>
+      <select id="fixOwner"></select>
+    </div>
+    <p class="catauto" id="fixCat"></p>
+    <div class="keys" id="fixKeys">
+      <button data-k="1">1</button><button data-k="2">2</button><button data-k="3">3</button>
+      <button data-k="4">4</button><button data-k="5">5</button><button data-k="6">6</button>
+      <button data-k="7">7</button><button data-k="8">8</button><button data-k="9">9</button>
+      <button data-k="000">000</button><button data-k="0">0</button><button data-k="del">←</button>
+    </div>
+    <button class="save fijo" id="fixSave">Guardar</button>
+    <button class="btn danger" id="fixDel" style="margin-top:10px" hidden>Borrar este gasto fijo</button>
   </div>
 </div>
 
