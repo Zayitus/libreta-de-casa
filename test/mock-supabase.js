@@ -8,43 +8,49 @@
 
   const DB = {
     households: [{ id:HID, name:'Casa de prueba' }],
-    household_members: [{ household_id:HID, user_id:'u1', display_name:'Gastón' },
-                        { household_id:HID, user_id:'u2', display_name:'Roxana' }],
-    settings: [{ household_id:HID, budget:0, income:5190000, usd_rate:1500, card_close_day:1,
+    household_members: [{ household_id:HID, user_id:'u1', display_name:'Ana' },
+                        { household_id:HID, user_id:'u2', display_name:'Bruno' }],
+    settings: [{ household_id:HID, budget:0, income:3000000, usd_rate:1500, card_close_day:1,
       categories:['Supermercado','Kiosco','Panadería','Transporte','Salud','Educación','Servicios','Casa','Ocio','Ropa','Otros'] }],
+    /* Datos INVENTADOS, sólo para probar la app. No son de nadie. */
     fixed_expenses: [
-      ['Escuela Jif',500000,'ARS','Educación','comun'],
-      ['Osde',308104.02,'ARS','Salud','comun'],
-      ['Inglés Next',150000,'ARS','Educación','comun'],
-      ['Cooperativa eléctrica',98428.11,'ARS','Servicios','comun'],
-      ['Camuzzi',92566.26,'ARS','Servicios','comun'],
-      ['Tv fuego',63385,'ARS','Servicios','comun'],
-      ['Netflix',13.40,'USD','Ocio','comun'],
-      ['Nafta',120000,'ARS','Transporte','Gastón'],
-      ['Federación Patronal',76032.42,'ARS','Transporte','Gastón'],
-      ['Claude',20,'USD','Servicios','Gastón'],
-      ['Celular Tuenti',19000,'ARS','Servicios','Gastón'],
-      ['Nafta',120000,'ARS','Transporte','Roxana'],
-      ['SanCor (camioneta)',170000,'ARS','Transporte','Roxana'],
-      ['Universidad UGR',260000,'ARS','Educación','Roxana'],
-      ['Universidad UTN',90000,'ARS','Educación','Roxana'],
-      ['Celulares',50000,'ARS','Servicios','Roxana'],
-      ['Camuzzi (casa de mamá)',100671.18,'ARS','Servicios','Casa de mamá']
+      ['Colegio de los chicos',200000,'ARS','Educación','comun'],
+      ['Prepaga',180000,'ARS','Salud','comun'],
+      ['Clases de inglés',60000,'ARS','Educación','comun'],
+      ['Luz',45000,'ARS','Servicios','comun'],
+      ['Gas',30000,'ARS','Servicios','comun'],
+      ['Internet',40000,'ARS','Servicios','comun'],
+      ['Streaming',10,'USD','Ocio','comun'],
+      ['Nafta',100000,'ARS','Transporte','Ana'],
+      ['Seguro del auto',50000,'ARS','Transporte','Ana'],
+      ['Suscripción',15,'USD','Servicios','Ana'],
+      ['Celular',15000,'ARS','Servicios','Ana'],
+      ['Nafta',100000,'ARS','Transporte','Bruno'],
+      ['Seguro de la moto',35000,'ARS','Transporte','Bruno'],
+      ['Facultad',120000,'ARS','Educación','Bruno'],
+      ['Gimnasio',25000,'ARS','Ocio','Bruno'],
+      ['Celulares',30000,'ARS','Servicios','Bruno'],
+      ['Gas (casa de campo)',20000,'ARS','Servicios','Casa de campo']
     ].map((r,i) => ({ id:'f'+i, household_id:HID, name:r[0], amount:r[1], currency:r[2],
-                      category:r[3], owner:r[4], due_day:10, active_from:mk(-8) })),
+                      category:r[3], owner:r[4], due_day:10, kind:'fijo', active_from:mk(-8) })),
     fixed_payments: [],
     expenses: [],
     goals: [
-      { id:'g1', household_id:HID, name:'Viaje a Portugal', emoji:'✈️', target_amount:9000, currency:'USD',
+      { id:'g1', household_id:HID, name:'Viaje', emoji:'✈️', target_amount:5000, currency:'USD',
         monthly_plan:400, deadline:(Y+2)+'-01-15', created_at:new Date(Y,Mo-6,1).toISOString() },
-      { id:'g2', household_id:HID, name:'PlayStation VR2', emoji:'🎮', target_amount:850000, currency:'ARS',
+      { id:'g2', household_id:HID, name:'Consola', emoji:'🎮', target_amount:500000, currency:'ARS',
         monthly_plan:90000, deadline:null, created_at:new Date(Y,Mo-3,1).toISOString() }
     ],
     goal_contributions: []
   };
+  /* Una compra en cuotas de ejemplo (inventada). */
+  DB.fixed_expenses.push({ id:'fc1', household_id:HID, name:'Heladera', amount:100000, currency:'ARS',
+    category:'Casa', owner:'comun', due_day:10, kind:'cuota', cuotas:12, total:1200000,
+    active_from:mk(-2), active_to:mk(9) });
+
   const lug = [['DASA','Supermercado'],['Imperio','Kiosco'],['Panadería','Panadería'],
                ['MaxiConsumo','Supermercado'],['Milhouse','Kiosco'],['Ruta 3','Kiosco'],
-               ['Farmacia del centro','Salud'],['Ferretería','Casa']];
+               ['Farmacia','Salud'],['Ferretería','Casa']];
   const notes = ['compra semanal','','','del mes','','','',''];
   for (let n = -5; n <= 0; n++){
     const k = mk(n), last = n === 0 ? Math.min(now.getDate(), 28) : 28, cnt = n === 0 ? 9 : 12;
@@ -52,17 +58,17 @@
       const d = 1 + Math.floor(i * (last-1) / Math.max(cnt-1,1));
       const L = lug[(i+n+8)%lug.length];
       DB.expenses.push({ id:id(), household_id:HID, amount:Math.round((9000 + Math.abs((i*7919+(n+12)*104729)%62000))/500)*500,
-        currency:'ARS', category:L[1], place:L[0], member_name: i%3 ? 'Gastón':'Roxana',
+        currency:'ARS', category:L[1], place:L[0], member_name: i%3 ? 'Ana':'Bruno',
         note: notes[(i+n+8)%notes.length], spent_on: day(k,d), receipt_path: null,
         created_at: new Date(k+'-'+String(d).padStart(2,'0')+'T12:00:00').toISOString() });
     }
   }
   for (let n = -6; n <= 0; n++)
     DB.goal_contributions.push({ id:id(), household_id:HID, goal_id:'g1', amount:380, currency:'USD',
-      member_name:'Gastón', note:'ahorro del mes', created_at:new Date(Y,Mo+n,5).toISOString() });
+      member_name:'Ana', note:'ahorro del mes', created_at:new Date(Y,Mo+n,5).toISOString() });
   for (let n = -3; n <= 0; n++)
     DB.goal_contributions.push({ id:id(), household_id:HID, goal_id:'g2', amount:95000, currency:'ARS',
-      member_name:'Roxana', note:'', created_at:new Date(Y,Mo+n,8).toISOString() });
+      member_name:'Bruno', note:'', created_at:new Date(Y,Mo+n,8).toISOString() });
 
   function builder(table){
     let rows = () => (DB[table] || []).slice();
