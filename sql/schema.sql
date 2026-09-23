@@ -326,3 +326,20 @@ alter table fixed_expenses add column if not exists owner text not null default 
 alter table expenses       add column if not exists place text not null default '';
 alter table settings       add column if not exists card_close_day int not null default 1;
 create index if not exists expenses_place_idx on expenses (household_id, place);
+
+-- ============================================================
+-- Migración: compras en cuotas (2026-09-23)
+-- Una compra en cuotas vive en fixed_expenses con kind = 'cuota':
+-- amount es el valor de cada cuota, total el de la compra, cuotas la
+-- cantidad, y active_from / active_to marcan la primera y la última.
+-- ============================================================
+alter table fixed_expenses add column if not exists kind text not null default 'fijo';
+alter table fixed_expenses add column if not exists cuotas int;
+alter table fixed_expenses add column if not exists total numeric(14,2);
+do $$ begin
+  alter table fixed_expenses add constraint fixed_kind_chk check (kind in ('fijo','cuota'));
+exception when duplicate_object then null; end $$;
+do $$ begin
+  alter table fixed_expenses add constraint fixed_cuotas_chk
+    check (kind = 'fijo' or (cuotas between 2 and 60 and active_to is not null));
+exception when duplicate_object then null; end $$;
