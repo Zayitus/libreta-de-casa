@@ -97,6 +97,23 @@ function fijosDe(m){
   return S.state.fixed.filter(f =>
     (!f.active_from || f.active_from <= m) && (!f.active_to || f.active_to >= m));
 }
+/* Fijos y cuotas comparten tabla: una compra en cuotas es un "fijo con
+   fecha de fin". fijosDe() trae los dos (los totales cuentan todo lo
+   comprometido); las listas separan con soloFijos() y cuotasDe(). */
+const soloFijos = m => fijosDe(m).filter(f => f.kind !== 'cuota');
+const cuotasDe  = m => fijosDe(m).filter(f => f.kind === 'cuota');
+const mesMas    = (m, n) => mesAnterior(m, -n);
+/* Qué número de cuota cae en el mes m (1 = la primera). */
+function nroCuota(f, m){
+  const [y1, m1] = f.active_from.split('-').map(Number);
+  const [y2, m2] = m.split('-').map(Number);
+  return (y2 - y1) * 12 + (m2 - m1) + 1;
+}
+/* "marzo", o "marzo 2027" si no es de este año. */
+function nomMes(m){
+  const n = MESES[+m.slice(5, 7) - 1];
+  return m.slice(0, 4) === mesDe(hoy()).slice(0, 4) ? n : n + ' ' + m.slice(0, 4);
+}
 function gastosDe(m){
   return S.state.expenses
     .filter(e => String(e.spent_on).slice(0, 7) === m)
@@ -104,10 +121,11 @@ function gastosDe(m){
                     String(b.created_at || '').localeCompare(String(a.created_at || '')));
 }
 function totales(m){
-  const o = { fijoArs:0, fijoUsd:0, varArs:0, varUsd:0, porCat:{}, porQuien:{} };
+  const o = { fijoArs:0, fijoUsd:0, cuotaArs:0, varArs:0, varUsd:0, porCat:{}, porQuien:{} };
   for (const f of fijosDe(m)){
     const a = ars(f.amount, f.currency);
     o.fijoArs += a;
+    if (f.kind === 'cuota') o.cuotaArs += a;
     if (f.currency === 'USD') o.fijoUsd += +f.amount;
     o.porCat[f.category] = (o.porCat[f.category] || 0) + a;
   }
@@ -213,6 +231,7 @@ function render(){
   listas(t);
   dolares(t);
   fijosBox();
+  cuotasBox();
   metasBox(t);
   numerosBox(t);
   pintarTabs();
@@ -266,6 +285,7 @@ function heroBox(t){
   $('#heroBudget').textContent = ingreso() ? 'de ' + fmt(ingreso()) + ' que entran' : '';
 
   $('#sFijos').textContent = fmtK(t.fijoArs);
+  $('#sFijosLab').textContent = t.cuotaArs ? 'Fijos y cuotas' : 'Fijos';
   $('#sVar').textContent   = fmtK(t.varArs);
   $('#sQueda').textContent = ingreso() ? fmtK(ingreso() - t.total) : '—';
 }
@@ -274,12 +294,23 @@ function heroBox(t){
    gasto fijo, sin tener que ir a la pestaña Mes. Usa data-nuevofijo (no
    data-lugar ni data-fijo) para no mezclarse con los otros manejadores. */
 function botonFijos(){
-  const fx = fijosDe(mes);
+  const fx = soloFijos(mes);
   const suma = fx.reduce((s, f) => s + ars(f.amount, f.currency), 0);
   const sub = fx.length ? `${fx.length} · ${fmtK(suma)} por mes` : 'sin cargar';
   return `<button class="qt fijo" data-nuevofijo="1" aria-label="Agregar un gasto fijo">` +
     `<span class="ic">${svg(IC.repite)}</span>` +
     `<strong>Fijos</strong><span>${sub}</span></button>`;
+}
+
+/* Botón "Cuotas": abre la hoja de compra en cuotas. Abajo muestra lo que
+   cae este mes en cuotas, así se ve de un vistazo. */
+function botonCuotas(){
+  const cq = cuotasDe(mes);
+  const suma = cq.reduce((s, f) => s + ars(f.amount, f.currency), 0);
+  const sub = cq.length ? `${fmtK(suma)} este mes` : 'sin cuotas';
+  return `<button class="qt cuota" data-nuevacuota="1" aria-label="Agregar una compra en cuotas">` +
+    `<span class="ic">${svg(IC.cal)}</span>` +
+    `<strong>Cuotas</strong><span>${sub}</span></button>`;
 }
 
 function quickBox(){
@@ -292,7 +323,7 @@ function quickBox(){
       `<strong>${esc(l.nom)}</strong>` +
       `<span>${suma ? fmtK(suma) + ' este mes' : 'sin cargar'}</span></button>`;
   }).join('') +
-  botonFijos() +
+  botonFijos() + botonCuotas() +
   `<button class="qt otro" data-lugar="otro">` +
     `<span class="ic">${svg(IC.mas)}</span><strong>Otro</strong><span>escribís dónde</span></button>`;
 }
@@ -355,7 +386,7 @@ function dolares(t){
 
 /* ------------------------------ gastos fijos ------------------------------ */
 function fijosBox(){
-  const fx = fijosDe(mes);
+  const fx = soloFijos(mes);
   if (!fx.length){
     $('#fxGroups').innerHTML = `<p class="empty"><b>No hay gastos fijos cargados</b>` +
       `Tocá el botón de abajo y cargá el primero: el colegio, la luz, el gas, los seguros.</p>`;
@@ -379,6 +410,124 @@ function fijosBox(){
   $('#fxCount').textContent = fx.length + ' conceptos';
   $('#btnNuevoFijo').innerHTML = '<span class="ic">' + svg(IC.repite) + '</span>Agregar un gasto fijo';
 }
+
+/* -------------------------------- cuotas -------------------------------- */
+function cuotasBox(){
+  const lista = cuotasDe(mes).sort((a, b) => a.active_to.localeCompare(b.active_to));
+  $('#cqCount').textContent = lista.length ? lista.length + (lista.length === 1 ? ' compra' : ' compras') : '';
+  if (!lista.length){
+    $('#cqList').innerHTML = `<p class="empty"><b>No hay cuotas este mes</b>` +
+      `Cargá la compra una sola vez y cada cuota cae sola en su mes.</p>`;
+  } else {
+    const total = lista.reduce((s, f) => s + ars(f.amount, f.currency), 0);
+    $('#cqList').innerHTML = '<div class="grp">' + lista.map(f => {
+      const k = nroCuota(f, mes), n = +f.cuotas;
+      const cola = k === n ? 'la última' : 'termina en ' + nomMes(f.active_to);
+      return `<div class="it" data-cuota="${esc(f.id)}"><span>${esc(f.name)}` +
+        `<small class="cqk">cuota ${k} de ${n} · ${cola}</small></span>` +
+        `<b>${fmt(ars(f.amount, f.currency))}</b></div>`;
+    }).join('') + `</div><div class="tot"><span>Cuotas de ${MESES[+mes.slice(5, 7) - 1]}</span><b>${fmt(total)}</b></div>`;
+  }
+
+  /* Lo comprometido desde este mes en adelante: cuándo se liberan las cuotas. */
+  const base = mesDe(hoy());
+  const prox = Array.from({ length: 6 }, (_, k) => {
+    const m = mesMas(base, k);
+    return { m, v: cuotasDe(m).reduce((s, f) => s + ars(f.amount, f.currency), 0) };
+  });
+  const max = Math.max(...prox.map(p => p.v));
+  $('#cqNext').innerHTML = !max ? '' :
+    `<p class="cqh">Ya comprometido en cuotas</p>` + prox.map((p, i) =>
+      `<div class="cqrow"><span>${i ? MES3[+p.m.slice(5, 7) - 1] : 'este mes'}</span>` +
+      `<span class="bar"><i style="width:${Math.round(p.v / max * 100)}%"></i></span>` +
+      `<b>${p.v ? fmtK(p.v) : '—'}</b></div>`).join('');
+  $('#btnNuevaCuota').innerHTML = '<span class="ic">' + svg(IC.cal) + '</span>Agregar una compra en cuotas';
+}
+
+/* Hoja de compra en cuotas. Se guarda en la tabla de fijos con kind='cuota',
+   desde el mes de la primera cuota (active_from) hasta el de la última
+   (active_to). Así los totales de cada mes ya la cuentan sin código extra. */
+const cuo = { id:null, val:'', n:6, start:null };
+
+/* Si ya pasó el cierre de la tarjeta, la compra entra en el resumen que viene. */
+function inicioSugerido(){
+  const h = hoy(), este = mesDe(h);
+  return (cierre() && h.getDate() > cierre()) ? mesMas(este, 1) : este;
+}
+
+function abrirCuota(id){
+  const f = id ? S.state.fixed.find(x => x.id === id) : null;
+  cuo.id = f ? f.id : null;
+  cuo.n = f ? +f.cuotas : 6;
+  const total = f ? (f.total != null ? +f.total : +f.amount * cuo.n) : 0;
+  cuo.val = f ? String(Math.round(total)) : '';
+  cuo.start = f ? f.active_from : inicioSugerido();
+  $('#cqTitle').textContent = f ? 'Corregir compra en cuotas' : 'Compra en cuotas';
+  $('#cqName').value = f ? f.name : '';
+  $('#cqOwner').innerHTML = duenios().map(d =>
+    `<option value="${esc(d.id)}"${(f && (f.owner || 'comun') === d.id) ? ' selected' : ''}>${esc(d.nom)}</option>`).join('');
+  const este = mesDe(hoy());
+  const ops = [...new Set([cuo.start, este, mesMas(este, 1)])].sort();
+  $('#cqStart').innerHTML = ops.map(m =>
+    `<option value="${m}"${m === cuo.start ? ' selected' : ''}>Primera cuota en ${nomMes(m)}</option>`).join('');
+  $('#cqDel').hidden = !f;
+  pintarCuota();
+  $('#cqScrim').hidden = false;
+  if (!f) setTimeout(() => $('#cqName').focus(), 120);
+}
+
+function pintarCuota(){
+  const total = +cuo.val || 0;
+  const v = $('#cqVal');
+  v.textContent = cuo.val ? total.toLocaleString('es-AR') : '0';
+  v.classList.toggle('zero', !cuo.val);
+  $$('#cqN button').forEach(b => b.setAttribute('aria-pressed', String(+b.dataset.n === cuo.n)));
+  const fin = mesMas(cuo.start, cuo.n - 1);
+  $('#cqResumen').innerHTML = svg(IC.cal) +
+    (total ? `${cuo.n} cuotas de ${fmt(total / cuo.n)}` : `${cuo.n} cuotas`) +
+    ` · de ${nomMes(cuo.start)} a ${nomMes(fin)}`;
+}
+
+$('#btnNuevaCuota').onclick = () => abrirCuota(null);
+$('#cqKeys').addEventListener('click', e => {
+  const b = e.target.closest('button[data-k]'); if (!b) return;
+  const k = b.dataset.k;
+  if (k === 'del') cuo.val = cuo.val.slice(0, -1);
+  else if (cuo.val.length < 10) cuo.val = (cuo.val === '0' ? '' : cuo.val) + k;
+  pintarCuota();
+});
+$('#cqN').addEventListener('click', e => {
+  const b = e.target.closest('button[data-n]'); if (!b) return;
+  cuo.n = +b.dataset.n; pintarCuota();
+});
+$('#cqStart').addEventListener('change', e => { cuo.start = e.target.value; pintarCuota(); });
+$('#cqX').onclick = () => { $('#cqScrim').hidden = true; };
+$('#cqScrim').addEventListener('click', e => { if (e.target === e.currentTarget) e.currentTarget.hidden = true; });
+
+$('#cqSave').onclick = async () => {
+  const name = $('#cqName').value.trim();
+  const total = num(cuo.val);
+  if (!name) return toast('¿Qué compraste?');
+  if (!total) return toast('Poné el monto total de la compra');
+  const row = { name, kind:'cuota', cuotas: cuo.n, total,
+                amount: Math.round(total / cuo.n * 100) / 100, currency:'ARS',
+                category: categorizar(name), owner: $('#cqOwner').value,
+                active_from: cuo.start, active_to: mesMas(cuo.start, cuo.n - 1) };
+  $('#cqScrim').hidden = true;
+  if (cuo.id) { await S.updateFixed(cuo.id, row); toast(name + ' corregido'); }
+  else { await S.addFixed({ ...row, due_day:10 });
+         /* Si la primera cuota es de un mes que viene, la lista de este mes no
+            la muestra todavía: conviene decirlo para que no parezca que no guardó. */
+         const dsp = cuo.start > mesDe(hoy()) ? ' · arranca en ' + nomMes(cuo.start) : '';
+         toast(`${name}: ${cuo.n} cuotas de ${fmt(row.amount)}${dsp}`); }
+  render();
+};
+$('#cqDel').onclick = async () => {
+  if (!cuo.id || !confirm('¿Borrar esta compra? Se borran todas sus cuotas, también las de meses pasados.')) return;
+  $('#cqScrim').hidden = true;
+  await S.delFixed(cuo.id);
+  render();
+};
 
 /* --------------------------------- metas --------------------------------- */
 function metasBox(t){
@@ -437,12 +586,13 @@ function numerosBox(t){
     return;
   }
   const pctFijo  = Math.round(t.fijoArs / t.total * 100);
+  const quienes  = t.cuotaArs ? 'Los fijos y las cuotas' : 'Los fijos';
   const pctEntra = ingreso() ? Math.round(t.fijoArs / ingreso() * 100) : 0;
   $('#cachitoNum').innerHTML = pctEntra
-    ? bocadillo(pctEntra > 60 ? 'alerta' : 'ok', 'Los fijos mandan',
+    ? bocadillo(pctEntra > 60 ? 'alerta' : 'ok', quienes + ' mandan',
         `De cada $100 que entran, $${pctEntra} ya están comprometidos antes del día 1. ` +
         `Y son el ${pctFijo} % de todo lo que gastás: ahí hay que meter mano, no en el kiosco.`)
-    : bocadillo('ok', 'Los fijos se llevan el ' + pctFijo + ' %',
+    : bocadillo('ok', quienes + ' se llevan el ' + pctFijo + ' %',
         'Decime cuánto entra por mes en Ajustes y te digo si eso es mucho o está bien.');
   donut(t);
   barras(t);
@@ -529,7 +679,7 @@ function barras(t){
 const SEGURO = /seguro|sancor|federaci|patronal|riesgo|caucion|caución/i;
 const SUSCRI = /netflix|disney|hbo|max|prime|spotify|paramount|star|claude|chatgpt|cable|tv |flow|directv/i;
 function revisa(t){
-  const fx = fijosDe(mes);
+  const fx = soloFijos(mes);
   const val = f => ars(f.amount, f.currency);
   const items = [];
 
@@ -556,11 +706,13 @@ function revisa(t){
       `${fmt(suma*12)} al año. ¿Se usan todas?`]);
   }
 
+  /* Porcentajes sobre los fijos solos: las cuotas tienen su propia tarjeta. */
+  const totFijos = fx.reduce((s, f) => s + val(f), 0);
   const porCat = {};
   for (const f of fx) porCat[f.category] = (porCat[f.category] || 0) + val(f);
   const mayor = Object.entries(porCat).sort((a, b) => b[1] - a[1])[0];
-  if (mayor && t.fijoArs){
-    const pct = Math.round(mayor[1] / t.fijoArs * 100);
+  if (mayor && totFijos){
+    const pct = Math.round(mayor[1] / totFijos * 100);
     if (pct >= 30) items.push(['alerta','warn', `${mayor[0]} se lleva el ${pct} % de los fijos`,
       `${fmt(mayor[1])} por mes. Es la categoría más pesada de la casa: cualquier ahorro ahí ` +
       `pesa más que todo lo que puedas recortar en el kiosco.`]);
@@ -570,7 +722,7 @@ function revisa(t){
   if (ajenos.length){
     const suma = ajenos.reduce((s, f) => s + val(f), 0);
     items.push(['ok','good', `${ajenos[0].owner}: ${fmt(suma)} aparte`,
-      `Está bien que esté separado: son el ${Math.round(suma / t.fijoArs * 100)} % de tus fijos ` +
+      `Está bien que esté separado: son el ${Math.round(suma / totFijos * 100)} % de tus fijos ` +
       `y no son gastos de esta casa.`]);
   }
 
@@ -941,6 +1093,8 @@ document.addEventListener('click', async e => {
   const g = e.target.closest('[data-goto]');   if (g) ir(g.dataset.goto);
   const q = e.target.closest('[data-lugar]');  if (q) abrirPad(q.dataset.lugar);
   const nf = e.target.closest('[data-nuevofijo]'); if (nf) abrirFijo(null);
+  const nc = e.target.closest('[data-nuevacuota]'); if (nc) abrirCuota(null);
+  const cq = e.target.closest('[data-cuota]');      if (cq) abrirCuota(cq.dataset.cuota);
   const c = e.target.closest('[data-cat]');
   if (c){ donutSel = donutSel === c.dataset.cat ? null : c.dataset.cat; donut(totales(mes)); }
 
@@ -972,7 +1126,7 @@ $('#btnNuevaMeta').onclick = async () => {
 
 document.addEventListener('keydown', e => {
   if (e.key !== 'Escape') return;
-  $('#scrim').hidden = true; $('#setScrim').hidden = true; $('#fixScrim').hidden = true;
+  $('#scrim').hidden = true; $('#setScrim').hidden = true; $('#fixScrim').hidden = true; $('#cqScrim').hidden = true;
 });
 
 /* ====================================================================
