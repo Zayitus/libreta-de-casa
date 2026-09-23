@@ -270,6 +270,18 @@ function heroBox(t){
   $('#sQueda').textContent = ingreso() ? fmtK(ingreso() - t.total) : '—';
 }
 
+/* Botón "Fijos" en la grilla de Inicio: abre directo la hoja de nuevo
+   gasto fijo, sin tener que ir a la pestaña Mes. Usa data-nuevofijo (no
+   data-lugar ni data-fijo) para no mezclarse con los otros manejadores. */
+function botonFijos(){
+  const fx = fijosDe(mes);
+  const suma = fx.reduce((s, f) => s + ars(f.amount, f.currency), 0);
+  const sub = fx.length ? `${fx.length} · ${fmtK(suma)} por mes` : 'sin cargar';
+  return `<button class="qt fijo" data-nuevofijo="1" aria-label="Agregar un gasto fijo">` +
+    `<span class="ic">${svg(IC.repite)}</span>` +
+    `<strong>Fijos</strong><span>${sub}</span></button>`;
+}
+
 function quickBox(){
   const delMes = gastosDe(mes);
   $('#quick').innerHTML = LUGARES.map(l => {
@@ -280,6 +292,7 @@ function quickBox(){
       `<strong>${esc(l.nom)}</strong>` +
       `<span>${suma ? fmtK(suma) + ' este mes' : 'sin cargar'}</span></button>`;
   }).join('') +
+  botonFijos() +
   `<button class="qt otro" data-lugar="otro">` +
     `<span class="ic">${svg(IC.mas)}</span><strong>Otro</strong><span>escribís dónde</span></button>`;
 }
@@ -927,6 +940,7 @@ $('#who').addEventListener('click', e => {
 document.addEventListener('click', async e => {
   const g = e.target.closest('[data-goto]');   if (g) ir(g.dataset.goto);
   const q = e.target.closest('[data-lugar]');  if (q) abrirPad(q.dataset.lugar);
+  const nf = e.target.closest('[data-nuevofijo]'); if (nf) abrirFijo(null);
   const c = e.target.closest('[data-cat]');
   if (c){ donutSel = donutSel === c.dataset.cat ? null : c.dataset.cat; donut(totales(mes)); }
 
