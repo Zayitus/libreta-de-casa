@@ -89,7 +89,7 @@
         <div class="bar" id="heroBar"></div>
         <div class="barfoot"><span id="heroLeft"></span><span id="heroBudget"></span></div>
         <div class="duo">
-          <div><span class="k">Fijos</span><span class="v" id="sFijos">$0</span></div>
+          <div><span class="k" id="sFijosLab">Fijos</span><span class="v" id="sFijos">$0</span></div>
           <div><span class="k">Variables</span><span class="v" id="sVar">$0</span></div>
           <div class="ok"><span class="k">Queda</span><span class="v" id="sQueda">—</span></div>
         </div>
@@ -123,6 +123,15 @@
         <div id="fxGroups"></div>
         <button class="btn fijo" id="btnNuevoFijo">
           <span class="ic"></span>Agregar un gasto fijo
+        </button>
+      </div>
+
+      <div class="card">
+        <header><h2>Cuotas</h2><span class="sub" id="cqCount"></span></header>
+        <div id="cqList"></div>
+        <div class="cqnext" id="cqNext"></div>
+        <button class="btn cuota" id="btnNuevaCuota">
+          <span class="ic"></span>Agregar una compra en cuotas
         </button>
       </div>
 
@@ -243,6 +252,47 @@
     </div>
     <button class="save fijo" id="fixSave">Guardar</button>
     <button class="btn danger" id="fixDel" style="margin-top:10px" hidden>Borrar este gasto fijo</button>
+  </div>
+</div>
+
+<!-- ------------------- COMPRA EN CUOTAS ------------------- -->
+<div class="scrim" id="cqScrim" hidden>
+  <div class="sheet cqsheet" role="dialog" aria-modal="true" aria-label="Compra en cuotas">
+    <div class="grab"></div>
+    <header>
+      <h2 id="cqTitle">Compra en cuotas</h2>
+      <button class="x" id="cqX" aria-label="Cerrar">✕</button>
+    </header>
+    <p class="repite cuota" id="cqResumen"></p>
+    <div class="amount">
+      <span class="cur">ARS</span>
+      <span class="v zero" id="cqVal">0</span>
+    </div>
+    <p class="conv">el total de la compra, no el de cada cuota</p>
+    <div class="field">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h10"/></svg>
+      <input id="cqName" type="text" placeholder="¿Qué compraste? Ej: Heladera en Frávega" autocomplete="off">
+    </div>
+    <div class="field">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.4"/><path d="M5 20a7 7 0 0 1 14 0"/></svg>
+      <select id="cqOwner"></select>
+    </div>
+    <div class="seg cuotas" id="cqN" role="group" aria-label="Cantidad de cuotas">
+      <button data-n="3">3</button><button data-n="6">6</button><button data-n="9">9</button>
+      <button data-n="12">12</button><button data-n="18">18</button><button data-n="24">24</button>
+    </div>
+    <div class="field">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>
+      <select id="cqStart"></select>
+    </div>
+    <div class="keys" id="cqKeys">
+      <button data-k="1">1</button><button data-k="2">2</button><button data-k="3">3</button>
+      <button data-k="4">4</button><button data-k="5">5</button><button data-k="6">6</button>
+      <button data-k="7">7</button><button data-k="8">8</button><button data-k="9">9</button>
+      <button data-k="000">000</button><button data-k="0">0</button><button data-k="del">←</button>
+    </div>
+    <button class="save cuota" id="cqSave">Guardar</button>
+    <button class="btn danger" id="cqDel" style="margin-top:10px" hidden>Borrar esta compra en cuotas</button>
   </div>
 </div>
 
