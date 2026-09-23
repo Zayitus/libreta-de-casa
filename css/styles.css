@@ -413,6 +413,9 @@ select.inp{appearance:none;background-image:url("data:image/svg+xml;utf8,<svg xm
 .btn.fijo .ic{display:grid;place-items:center}
 .btn.fijo .ic svg{width:18px;height:18px}
 .btn.fijo:active{background:var(--fijo);color:var(--fijo-ink);border-style:solid}
+/* El botón "Fijos" de la grilla de Inicio: mismo color propio que los fijos */
+.qt.fijo{border-color:var(--fijo)}
+.qt.fijo .ic{background:var(--fijo);color:var(--fijo-ink)}
 
 .save.fijo{background:var(--fijo);color:var(--fijo-ink);box-shadow:none}
 .fixsheet .amount{border-color:var(--fijo)}
@@ -428,3 +431,32 @@ select.inp{appearance:none;background-image:url("data:image/svg+xml;utf8,<svg xm
 /* cada fijo de la lista se puede tocar para corregirlo */
 .grp .it{cursor:pointer;border-radius:8px;margin-inline:-6px;padding-inline:23px 6px}
 .grp .it:active{background:var(--card-3)}
+
+/* ------------------- cuotas: su propio color (aguamarina) -------------------
+   Una compra en cuotas se carga una vez y cae sola en cada mes hasta
+   terminar. Color propio para no confundirla con un fijo ni con un gasto. */
+:root{ --cuota:#3CC8D8; --cuota-ink:#062A30; --cuota-wash:rgba(60,200,216,.13); }
+:root[data-tema="lila"]{ --cuota:#0B7C8A; --cuota-ink:#FFFFFF; --cuota-wash:rgba(11,124,138,.10); }
+
+.qt.cuota{border-color:var(--cuota)}
+.qt.cuota .ic{background:var(--cuota);color:var(--cuota-ink)}
+.btn.cuota{background:var(--cuota-wash);color:var(--cuota);border:1px dashed var(--cuota);
+           box-shadow:none;font-size:15px;padding:12px;margin-top:14px;
+           display:flex;align-items:center;justify-content:center;gap:9px}
+.btn.cuota .ic{display:grid;place-items:center}
+.btn.cuota .ic svg{width:18px;height:18px}
+.btn.cuota:active{background:var(--cuota);color:var(--cuota-ink);border-style:solid}
+.save.cuota{background:var(--cuota);color:var(--cuota-ink);box-shadow:none}
+.cqsheet .amount{border-color:var(--cuota)}
+.cqsheet .cur{background:var(--cuota-wash);color:var(--cuota)}
+.repite.cuota{background:var(--cuota-wash);color:var(--cuota)}
+.seg.cuotas{grid-template-columns:repeat(6,1fr);margin:10px 0 0}
+.seg.cuotas button[aria-pressed="true"]{background:var(--cuota);color:var(--cuota-ink)}
+.cqk{display:block;font-size:11px;color:var(--muted);margin-top:1px}
+.cqnext{margin-top:12px}
+.cqh{font-size:12px;font-weight:800;color:var(--ink-2);margin-bottom:6px}
+.cqrow{display:grid;grid-template-columns:62px 1fr 58px;align-items:center;gap:8px;font-size:12px;padding:2px 0}
+.cqrow>span:first-child{color:var(--muted)}
+.cqrow .bar{height:8px;border-radius:4px;background:var(--card-2);overflow:hidden}
+.cqrow .bar i{display:block;height:100%;border-radius:4px;background:var(--cuota)}
+.cqrow b{text-align:right;font-family:var(--disp);font-weight:600;font-variant-numeric:tabular-nums}
